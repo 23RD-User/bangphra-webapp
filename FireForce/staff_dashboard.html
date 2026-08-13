@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — เจ้าหน้าที่เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        .staff-header-card{background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(255,255,255,.05));border:0.5px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-top:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+        .staff-name-text{font-size:18px;font-weight:700;color:white}
+        .staff-pos-text{font-size:14px;color:rgba(255,255,255,.55);margin-top:2px}
+        .role-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:700}
+        .badge-admin{background:var(--accent);color:white}
+        .badge-staff{background:rgba(255,255,255,.15);color:rgba(255,255,255,.9)}
+        .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:22px}
+        .stat-card-staff{background:var(--bg-card);border-radius:var(--radius-md);padding:14px;border:0.5px solid var(--border);box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+            transition:transform .2s ease,box-shadow .2s ease;opacity:0;transform:translateY(10px);animation:statCardIn .5s ease forwards}
+        .stat-card-staff::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--stat-accent,var(--accent))}
+        .stat-card-staff:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.09)}
+        .stat-card-staff:active{transform:translateY(-1px) scale(.99)}
+        .stat-card-staff .card-top{display:flex;align-items:flex-start;justify-content:space-between}
+        .stat-card-staff .mini-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--stat-accent-light,rgba(0,0,0,.05))}
+        .stat-card-staff .mini-icon i{font-size:12px;color:var(--stat-accent,var(--accent))}
+        .stat-card-staff .num{font-size:36px;font-weight:800;line-height:1;display:block;margin:8px 0 4px;letter-spacing:-.5px}
+        .stat-card-staff .lbl{font-size:14px;color:var(--text-muted);font-weight:600}
+        .stat-card-staff .chg{font-size:12.5px;font-weight:700;margin-top:5px;display:flex;align-items:center;gap:3px}
+        .chg-up{color:#2E7D32}.chg-down{color:#C62828}.chg-same{color:var(--text-muted)}
+        @keyframes statCardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .stat-grid .stat-card-staff:nth-child(1){animation-delay:.03s}
+        .stat-grid .stat-card-staff:nth-child(2){animation-delay:.09s}
+        .stat-grid .stat-card-staff:nth-child(3){animation-delay:.15s}
+        .stat-grid .stat-card-staff:nth-child(4){animation-delay:.21s}
+        .urgent-item{background:var(--bg-card);border-radius:var(--radius-md);padding:13px 14px 13px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;border:0.5px solid var(--border);border-left:3px solid var(--urgent-accent,var(--accent));box-shadow:var(--shadow-sm);transition:border-color .2s,transform .15s,box-shadow .2s;
+            opacity:0;transform:translateY(8px);animation:urgentIn .4s ease forwards}
+        .urgent-item:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+        .urgent-item:active{transform:translateY(0) scale(.99)}
+        @keyframes urgentIn{to{opacity:1;transform:translateY(0)}}
+        .urgent-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .urgent-title{font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:3px}
+        .urgent-meta{font-size:13px;color:var(--text-muted);margin-bottom:6px}
+        .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:13px;font-weight:700}
+        .pill-new{background:#E3F2FD;color:#1565C0}
+        .pill-prog{background:#FFF8E1;color:#F57F17}
+        .pill-done{background:#E8F5E9;color:#2E7D32}
+        .btn-action{padding:6px 14px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;transition:opacity .15s,transform .15s;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+        .btn-action:hover{opacity:.85}
+        .btn-action:active{transform:scale(.95)}
+        .btn-accept{background:#E8F5E9;color:#2E7D32}
+        .btn-detail{background:var(--bg-card-2);color:var(--text-secondary);border:0.5px solid var(--border)}
+        .staff-bottom-nav{position:sticky;bottom:0;width:100%;background:var(--bg-card);display:flex;justify-content:space-around;padding:10px 0 14px;border-top:0.5px solid var(--border);z-index:50}
+        .snav-item{display:flex;flex-direction:column;align-items:center;color:var(--text-muted);font-size:var(--fs-xs);gap:4px;min-width:60px;font-weight:600;transition:color .2s,transform .15s;text-decoration:none}
+        .snav-item.active{color:var(--accent)}
+        .snav-item i{font-size:20px;transition:transform .15s}
+        .snav-item:active i{transform:scale(1.15)}
+        .notif-dot{position:relative;display:inline-block}
+        .notif-dot::after{content:'';position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--accent);border-radius:50%;border:1.5px solid var(--navy);animation:notifPulse 2s ease-in-out infinite}
+        @keyframes notifPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.7}}
+        .app-header .header-org-name{font-size:18px !important;font-weight:800 !important;letter-spacing:-.2px}
+        .app-header .header-org-sub{font-size:13px !important;color:rgba(255,255,255,.6) !important}
+        .app-header .header-logo-icon{width:40px !important;height:40px !important;border-radius:12px !important}
+        .app-header .header-logo-icon i{font-size:19px !important}
+        .header-icon-btn,.theme-toggle-btn{transition:transform .15s}
+        .header-icon-btn:active,.theme-toggle-btn:active{transform:scale(.88)}
+        .stat-loading{opacity:0.4;animation:pulse-opacity 1s infinite;}
+        @keyframes pulse-opacity{0%,100%{opacity:0.4}50%{opacity:0.8}}
+        .empty-urgent{text-align:center;padding:24px;color:var(--text-muted);}
+        .empty-urgent i{font-size:36px;margin-bottom:8px;display:block;color:var(--border);}
+        .section-block{margin-bottom:26px}
+        .section-block .section-hd-left{font-size:16px !important;font-weight:700 !important}
+        #todayDate{font-size:13px !important}
+        .service-card{transition:transform .15s ease,box-shadow .15s ease}
+        .service-card:hover{transform:translateY(-2px)}
+        .service-card:active{transform:translateY(0) scale(.96)}
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header class="app-header">
+        <div class="header-top-row">
+            <div class="header-logo-group">
+                <div class="header-logo-icon"><i class="fa-solid fa-building-columns" aria-hidden="true"></i></div>
+                <div>
+                    <div class="header-org-name">เทศบาลตำบลบางพระ</div>
+                    <div class="header-org-sub">Staff Portal</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                    <span class="toggle-knob"><i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i><i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i></span>
+                </button>
+                <button class="header-icon-btn" aria-label="การแจ้งเตือน" id="bellBtn" onclick="showToast('กำลังโหลดการแจ้งเตือน...','info')">
+                    <span class="notif-dot"><i class="fa-solid fa-bell" aria-hidden="true"></i></span>
+                </button>
+                <button class="header-icon-btn" aria-label="ออกจากระบบ" onclick="confirmLogout()">
+                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        <div class="staff-header-card">
+            <div>
+                <div class="staff-name-text" id="staffNameDisplay">กำลังโหลด...</div>
+                <div class="staff-pos-text" id="staffPhoneDisplay">เจ้าหน้าที่เทศบาลตำบลบางพระ</div>
+            </div>
+            <span style="display:flex;align-items:center;gap:8px;">
+                <button id="staffListBtn" onclick="loadStaffList()" aria-label="รายชื่อเจ้าหน้าที่" style="display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.12);border:none;border-radius:8px;width:30px;height:30px;color:white;cursor:pointer;flex-shrink:0;">
+                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                </button>
+                <span class="role-badge" id="roleBadge">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    <span id="roleText">—</span>
+                </span>
+            </span>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top:18px;">
+
+        <div class="section-block">
+            <div class="section-hd">
+                <div class="section-hd-left"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> ภาพรวมวันนี้</div>
+                <span style="font-size:var(--fs-xs);color:var(--text-muted);" id="todayDate"></span>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card-staff" style="--stat-accent:var(--accent);--stat-accent-light:#FFF0EB;">
+                    <div class="card-top">
+                        <span class="lbl">เรื่องใหม่วันนี้</span>
+                        <span class="mini-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></span>
+                    </div>
+                    <span class="num stat-loading" style="color:var(--accent);" id="statNew">—</span>
+                    <div class="chg chg-up" id="statNewChg"><i class="fa-solid fa-arrow-up" style="font-size:10px"></i> กำลังโหลด...</div>
+                </div>
+                <div class="stat-card-staff" style="--stat-accent:#F57F17;--stat-accent-light:#FFF8E1;">
+                    <div class="card-top">
+                        <span class="lbl">รอดำเนินการ</span>
+                        <span class="mini-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>
+                    </div>
+                    <span class="num stat-loading" style="color:#F57F17;" id="statPending">—</span>
+                    <div class="chg chg-same" id="statPendingChg">กำลังโหลด...</div>
+                </div>
+                <div class="stat-card-staff" style="--stat-accent:#2E7D32;--stat-accent-light:#E8F5E9;">
+                    <div class="card-top">
+                        <span class="lbl">แก้ไขแล้วเดือนนี้</span>
+                        <span class="mini-icon"><i class="fa-solid fa-check-double" aria-hidden="true"></i></span>
+                    </div>
+                    <span class="num stat-loading" style="color:#2E7D32;" id="statDone">—</span>
+                    <div class="chg chg-up" id="statDoneChg"><i class="fa-solid fa-arrow-up" style="font-size:10px"></i> กำลังโหลด...</div>
+                </div>
+                <div class="stat-card-staff" style="--stat-accent:#1565C0;--stat-accent-light:#E3F2FD;">
+                    <div class="card-top">
+                        <span class="lbl">ถังแจ้งซ่อม</span>
+                        <span class="mini-icon"><i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i></span>
+                    </div>
+                    <span class="num stat-loading" style="color:#1565C0;" id="statTankIssue">—</span>
+                    <div class="chg chg-same" id="statTankChg">กำลังโหลด...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-hd">
+                <div class="section-hd-left"><i class="fa-solid fa-clock" aria-hidden="true"></i> รอดำเนินการด่วน</div>
+                <a href="staff_reports.html" class="section-hd-all">ดูทั้งหมด</a>
+            </div>
+            <div id="urgentList">
+                <div class="empty-urgent">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>กำลังโหลดข้อมูล...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="staff-bottom-nav" aria-label="เมนูเจ้าหน้าที่">
+        <a href="staff_dashboard.html" class="snav-item active" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>หน้าหลัก</span></a>
+        <a href="staff_reports.html" class="snav-item"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span>ร้องเรียน</span></a>
+        <a href="staff_tanks.html" class="snav-item"><i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i><span>ถัง</span></a>
+    </nav>
+</div>
+
+<!-- Modal รายชื่อเจ้าหน้าที่ (ย้ายมาจาก staff_settings.html) -->
+<div id="staffModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);align-items:flex-end;">
+    <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-height:75vh;overflow-y:auto;padding:20px 16px 32px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:var(--fs-md);font-weight:700;color:var(--text-primary);">รายชื่อเจ้าหน้าที่</div>
+            <button onclick="closeStaffModal()" style="display:flex;align-items:center;justify-content:center;background:var(--bg-base);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--text-muted);flex-shrink:0;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="staffListContent">
+            <div style="text-align:center;padding:24px;color:var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
+                <p style="margin-top:8px;">กำลังโหลด...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+(function initStaffPage(){
+    var role  = sessionStorage.getItem('userRole')  || 'staff';
+    var name  = sessionStorage.getItem('staffName') || 'เจ้าหน้าที่';
+    var phone = sessionStorage.getItem('staffPhone')|| '';
+    var isAdmin = role === 'admin';
+
+    document.getElementById('staffNameDisplay').textContent = name;
+    if (phone) {
+        document.getElementById('staffPhoneDisplay').textContent = phone + ' • เทศบาลตำบลบางพระ';
+    }
+
+    var badge = document.getElementById('roleBadge');
+    document.getElementById('roleText').textContent = isAdmin ? 'Admin' : 'Staff';
+    badge.className = 'role-badge ' + (isAdmin ? 'badge-admin' : 'badge-staff');
+
+    if (isAdmin) {
+        var sb = document.getElementById('staffListBtn');
+        if (sb) sb.style.display = 'flex';
+    }
+})();
+
+/* ===== รายชื่อเจ้าหน้าที่ (ย้ายมาจาก staff_settings.html) ===== */
+function loadStaffList() {
+    document.getElementById('staffModal').style.display = 'flex';
+    fetch(SCRIPT_URL + '?type=getStaff&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            if (!data.success || !data.staff || data.staff.length === 0) {
+                document.getElementById('staffListContent').innerHTML =
+                    '<p style="text-align:center;color:var(--text-muted);padding:24px;">ไม่พบข้อมูลเจ้าหน้าที่</p>';
+                return;
+            }
+            var roleMap = {
+                admin   : { label:'Admin',   bg:'#FFF0EB', color:'#E8491E' },
+                manager : { label:'Manager', bg:'#E3F2FD', color:'#1565C0' },
+                staff   : { label:'Staff',   bg:'#E8F5E9', color:'#2E7D32' },
+            };
+            var html = '';
+            data.staff.forEach(function(s) {
+                var role    = (s.Role||'staff').toLowerCase();
+                var roleObj = roleMap[role] || roleMap.staff;
+                var isActive = (s.Status||'Active') === 'Active';
+                html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--divider);">' +
+                    '<div style="width:40px;height:40px;border-radius:50%;background:var(--bg-base);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+                    '<i class="fa-solid fa-user" style="color:var(--text-muted);"></i></div>' +
+                    '<div style="flex:1;min-width:0;">' +
+                    '<div style="display:flex;align-items:center;gap:6px;">' +
+                    '<span style="font-size:var(--fs-base);font-weight:700;color:var(--text-primary);">' + s.Name + '</span>' +
+                    (!isActive ? '<span style="font-size:10px;color:#999;background:#F5F5F5;padding:2px 6px;border-radius:4px;">Inactive</span>' : '') +
+                    '</div>' +
+                    '<div style="font-size:var(--fs-xs);color:var(--text-muted);margin-top:2px;">' + s.Phone + '</div>' +
+                    '<div style="font-size:var(--fs-xs);color:var(--text-muted);">' + s.Email + '</div>' +
+                    '</div>' +
+                    '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:' + roleObj.bg + ';color:' + roleObj.color + ';flex-shrink:0;">' + roleObj.label + '</span>' +
+                    '</div>';
+            });
+            document.getElementById('staffListContent').innerHTML = html;
+        })
+        .catch(function(){
+            document.getElementById('staffListContent').innerHTML =
+                '<p style="text-align:center;color:var(--text-muted);padding:24px;">ไม่สามารถโหลดข้อมูลได้</p>';
+        });
+}
+
+function closeStaffModal() {
+    document.getElementById('staffModal').style.display = 'none';
+}
+
+(function setDate(){
+    var d = new Date();
+    var days   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    document.getElementById('todayDate').textContent = 'วัน' + days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+})();
+
+function countUp(el, target, dur) {
+    el.classList.remove('stat-loading');
+    var s = 0, step = target / (dur / 16);
+    var t = setInterval(function(){
+        s += step;
+        if (s >= target) { s = target; clearInterval(t); }
+        el.textContent = Math.round(s);
+    }, 16);
+}
+
+async function loadStats() {
+    try {
+        var res  = await fetch(SCRIPT_URL + '?type=stats');
+        var data = await res.json();
+        if (!data.success) throw new Error(data.message);
+
+        countUp(document.getElementById('statNew'),       data.newToday  || 0, 800);
+        countUp(document.getElementById('statPending'),   data.pending   || 0, 600);
+        countUp(document.getElementById('statDone'),      data.doneMonth || 0, 1000);
+        countUp(document.getElementById('statTankIssue'), data.tankIssue || 0, 500);
+
+        document.getElementById('statNewChg').innerHTML     = '<i class="fa-solid fa-database" style="font-size:10px"></i> ข้อมูลจริงจาก Sheets';
+        document.getElementById('statPendingChg').innerHTML = '<i class="fa-solid fa-database" style="font-size:10px"></i> รวม new + inprogress';
+        document.getElementById('statDoneChg').innerHTML    = '<i class="fa-solid fa-database" style="font-size:10px"></i> เดือนนี้ทั้งหมด';
+        document.getElementById('statTankChg').innerHTML    = '<i class="fa-solid fa-database" style="font-size:10px"></i> ชำรุด + สูญหาย';
+
+    } catch (err) {
+        console.error('loadStats error:', err);
+        ['statNew','statPending','statDone','statTankIssue'].forEach(function(id){
+            var el = document.getElementById(id);
+            el.classList.remove('stat-loading');
+            el.textContent = '—';
+        });
+        showToast('ไม่สามารถโหลดสถิติได้', 'error');
+    }
+}
+
+var CATEGORY_ICONS = {
+    disaster:    { icon:'fa-fire',            bg:'#FFEBEE', color:'#B71C1C' },
+    other:       { icon:'fa-ellipsis',        bg:'#F5F5F5', color:'#616161' },
+};
+
+function timeAgo(dateStr) {
+    var diff = (new Date() - new Date(dateStr)) / 1000;
+    if (diff < 60)   return 'เมื่อกี้';
+    if (diff < 3600) return Math.floor(diff/60) + ' นาทีที่แล้ว';
+    if (diff < 86400)return Math.floor(diff/3600) + ' ชั่วโมงที่แล้ว';
+    return Math.floor(diff/86400) + ' วันที่แล้ว';
+}
+
+async function loadUrgentReports() {
+    try {
+        var res  = await fetch(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''));
+        var data = await res.json();
+        if (!data.success) {
+            if (data.message && data.message.indexOf('เข้าสู่ระบบใหม่') > -1) {
+                showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error');
+                setTimeout(function(){ window.location.href = 'login.html'; }, 1500);
+                return;
+            }
+            throw new Error(data.message);
+        }
+
+        var urgent = (data.reports || [])
+            .filter(function(r){ return r.Status === 'new' || r.Status === 'inprogress'; })
+            .slice(0, 3);
+
+        var container = document.getElementById('urgentList');
+
+        if (urgent.length === 0) {
+            container.innerHTML = '<div class="empty-urgent"><i class="fa-solid fa-circle-check" style="color:#2E7D32;"></i><p style="color:var(--text-muted);">ไม่มีเรื่องรอดำเนินการ</p></div>';
+            return;
+        }
+
+        container.innerHTML = urgent.map(function(r, idx) {
+            var cat     = CATEGORY_ICONS[r.Category] || CATEGORY_ICONS.other;
+            var isNew   = r.Status === 'new';
+            var pillCls = isNew ? 'pill-new' : 'pill-prog';
+            var pillTxt = isNew ? 'ใหม่' : 'กำลังดำเนินการ';
+            var accentColor = isNew ? '#1565C0' : '#F57F17';
+            var time    = timeAgo(r.Timestamp);
+            var detailsText = (r.Details || 'ไม่มีรายละเอียด').substring(0, 40);
+            return '<div class="urgent-item" style="--urgent-accent:' + accentColor + ';animation-delay:' + (idx * 0.08) + 's;">' +
+                '<div class="urgent-icon" style="background:' + cat.bg + ';">' +
+                    '<i class="fa-solid ' + cat.icon + '" style="color:' + cat.color + ';font-size:18px;" aria-hidden="true"></i>' +
+                '</div>' +
+                '<div style="flex:1;">' +
+                    '<div class="urgent-title">' + escapeHtml(detailsText) + '</div>' +
+                    '<div class="urgent-meta">' + escapeHtml(r.ReporterName || '—') + ' • ' + time + '</div>' +
+                    '<span class="pill ' + pillCls + '">' + pillTxt + '</span>' +
+                    '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+                        '<a href="staff_reports.html" class="btn-action btn-accept"><i class="fa-solid fa-eye" aria-hidden="true"></i> จัดการ</a>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+    } catch (err) {
+        console.error('loadUrgentReports error:', err);
+        document.getElementById('urgentList').innerHTML =
+            '<div class="empty-urgent"><i class="fa-solid fa-triangle-exclamation"></i><p>โหลดข้อมูลไม่สำเร็จ</p></div>';
+    }
+}
+
+/* =====================================================
+   Logout — แจ้ง backend ให้ลบ token ทิ้งก่อน ไม่ใช่แค่ clear
+   sessionStorage ฝั่งเครื่องอย่างเดียว (เดิม token จะยังใช้ได้ต่อ
+   แม้ผู้ใช้กด logout ไปแล้ว ถ้าไม่ลบที่ backend ด้วย)
+   ===================================================== */
+function confirmLogout() {
+    if (!confirm('ยืนยันการออกจากระบบ?')) return;
+
+    var token = sessionStorage.getItem('staffToken') || '';
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'logout', token: token }),
+    })
+    .catch(function(){ /* ต่อให้แจ้ง backend ไม่สำเร็จ ก็ยัง logout ฝั่งเครื่องต่อได้ */ })
+    .finally(function(){
+        sessionStorage.clear();
+        window.location.href = 'login.html';
+    });
+}
+
+loadStats();
+loadUrgentReports();
+</script>
+</body>
+</html>

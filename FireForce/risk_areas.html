@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>พื้นที่เสี่ยงภัย - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <style>
+        .risk-tab-box {
+            display:flex; background:var(--bg-card);
+            border-radius:12px; padding:5px;
+            margin-bottom:16px; border:0.5px solid var(--border);
+        }
+        .risk-tab-btn {
+            flex:1; padding:10px; border:none; border-radius:9px;
+            background:transparent; color:var(--text-muted);
+            font-size:14px; font-weight:700; cursor:pointer;
+            transition:all 0.2s; font-family:'Sarabun',sans-serif;
+            display:flex; align-items:center; justify-content:center; gap:6px;
+        }
+        .risk-tab-btn.active.fire  { background:#e53935; color:white; box-shadow:0 2px 8px rgba(229,57,53,0.3); }
+        .risk-tab-btn.active.flood { background:#1e88e5; color:white; box-shadow:0 2px 8px rgba(30,136,229,0.3); }
+
+        #riskMap {
+            width:100%; height:48vh; border-radius:var(--radius-md);
+            box-shadow:var(--shadow-md); z-index:1; margin-bottom:16px;
+        }
+        .leaflet-popup-content-wrapper { font-family:'Sarabun',sans-serif; border-radius:12px; }
+        .leaflet-popup-content h3 { font-size:16px; margin:0 0 5px; font-weight:bold; }
+        .leaflet-popup-content p  { font-size:14px; margin:2px 0; }
+        .zone-tooltip {
+            font-family:'Sarabun',sans-serif; font-size:12px; font-weight:700;
+            border-radius:6px; padding:4px 8px;
+        }
+
+        .risk-list-item {
+            display:flex; align-items:center; gap:12px;
+            background:var(--bg-card); border-radius:14px;
+            border:0.5px solid var(--border);
+            padding:14px 16px; margin-bottom:8px;
+            cursor:pointer; transition:transform 0.15s, opacity 0.15s;
+        }
+        .risk-list-item:active { transform:scale(0.98); opacity:0.85; }
+        .risk-list-icon {
+            width:40px; height:40px; border-radius:11px;
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0;
+        }
+        .risk-list-icon i { font-size:17px; color:white; }
+        .risk-list-title { font-size:15px; font-weight:700; color:var(--text-primary); }
+        .risk-list-sub { font-size:13px; color:var(--text-muted); margin-top:3px; }
+        .risk-level-badge {
+            font-size:12px; font-weight:700; padding:4px 10px;
+            border-radius:20px; margin-left:auto; flex-shrink:0;
+        }
+        .risk-level-high { background:#FDEDE7; color:#E8491E; }
+        .risk-level-med  { background:#FFF6E0; color:#9A6B00; }
+
+        .sample-note {
+            background:#FFF6E0; border:0.5px solid #FFE0A3;
+            border-radius:10px; padding:10px 12px; margin-bottom:16px;
+            font-size:12px; color:#8A6500; display:flex; gap:8px; align-items:flex-start;
+        }
+        .sample-note i { margin-top:2px; flex-shrink:0; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="index.html" class="back-arrow" aria-label="กลับหน้าหลัก">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">พื้นที่เสี่ยงภัย</div>
+                    <div class="header-page-sub">9 ชุมชน เทศบาลตำบลบางพระ</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob">
+                    <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <div class="sample-note">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>ข้อมูลจุดเสี่ยงภัยและกรอบเขตชุมชนเป็นข้อมูลจริงจากแผนป้องกันฯ ทต.บางพระ ปี 2564-2570</span>
+        </div>
+
+        <div class="risk-tab-box" role="tablist" aria-label="เลือกประเภทภัย">
+            <button class="risk-tab-btn active fire" id="btnFire"
+                    onclick="switchRiskType('fire')"
+                    role="tab" aria-selected="true" aria-controls="riskMap">
+                <i class="fa-solid fa-fire" aria-hidden="true"></i> จุดเสี่ยงไฟ
+            </button>
+            <button class="risk-tab-btn flood" id="btnFlood"
+                    onclick="switchRiskType('flood')"
+                    role="tab" aria-selected="false" aria-controls="riskMap">
+                <i class="fa-solid fa-water" aria-hidden="true"></i> จุดเสี่ยงน้ำท่วม
+            </button>
+        </div>
+
+        <div id="riskMap" role="region" aria-label="แผนที่จุดเสี่ยงภัย"></div>
+
+        <div style="margin-bottom:10px;">
+            <span id="listTitle" style="font-size:var(--fs-sm);font-weight:700;color:var(--text-primary);">จุดเสี่ยงไฟไหม้ตามชุมชน</span>
+        </div>
+
+        <div id="riskListContainer"></div>
+
+    </main>
+
+    <nav class="bottom-nav" aria-label="เมนูหลัก">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-house"></i></span>
+            <span class="nav-text">หน้าหลัก</span>
+        </a>
+        <a href="report.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span class="nav-text">ร้องเรียน</span>
+        </a>
+        <a href="track.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="nav-text">ติดตาม</span>
+        </a>
+        <a href="login.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="nav-text">โปรไฟล์</span>
+        </a>
+    </nav>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+var map = null;
+var markerLayer = null;
+var zoneLayer = null;
+var currentType = 'fire';
+var currentMarkers = [];
+
+/* =====================================================
+   กรอบเขตชุมชนจริง — ดึงจากไฟล์ KMZ ที่เทศบาลให้มา
+   ===================================================== */
+var communityZones = {
+    "ชุมชนคอเขาพัฒนา": [[13.210082,100.946404],[13.20394,100.942627],[13.1983,100.95872],[13.201809,100.960137],[13.204776,100.962197],[13.207074,100.962583],[13.208411,100.960952],[13.207909,100.956446],[13.206238,100.954729],[13.206907,100.948549],[13.210082,100.946404]],
+    "ชุมชนท้ายบ้าน": [[13.206239,100.937412],[13.206291,100.937809],[13.206834,100.937664],[13.207633,100.938002],[13.208939,100.937632],[13.209414,100.937702],[13.210025,100.937605],[13.209111,100.935953],[13.208683,100.935095],[13.207983,100.935309],[13.207001,100.93584],[13.206547,100.936323],[13.206286,100.936859],[13.206239,100.937412]],
+    "ชุมชนทิวสนพัฒนา": [[13.212909,100.948317],[13.211509,100.948692],[13.212867,100.954443],[13.214403,100.95676],[13.21645,100.961974],[13.221007,100.962759],[13.222678,100.963049],[13.223795,100.959154],[13.223482,100.95585],[13.222333,100.953167],[13.21943,100.952395],[13.212909,100.948317]],
+    "ชุมชนวัดหลวง": [[13.208811,100.935051],[13.210075,100.937433],[13.20996,100.939064],[13.210221,100.939772],[13.211819,100.93975],[13.211652,100.937562],[13.212028,100.936425],[13.212268,100.935395],[13.212582,100.934815],[13.212425,100.93444],[13.211746,100.934386],[13.211057,100.934418],[13.210127,100.934622],[13.208811,100.935051]],
+    "ชุมชนบ้านนาพุ": [[13.213232,100.946578],[13.212877,100.947972],[13.219472,100.952],[13.222152,100.9528],[13.223238,100.952843],[13.222883,100.949904],[13.222736,100.948273],[13.220501,100.94765],[13.219749,100.947715],[13.219373,100.94808],[13.218245,100.947844],[13.218433,100.946663],[13.218036,100.946213],[13.216365,100.945655],[13.215822,100.944797],[13.214694,100.94396],[13.214047,100.943337],[13.213942,100.944432],[13.213232,100.946578]],
+    "ชุมชนตลาดบน": [[13.222121,100.942067],[13.220513,100.940737],[13.210549,100.944363],[13.211739,100.945157],[13.21458,100.943805],[13.215667,100.944299],[13.216356,100.9455],[13.217902,100.945994],[13.222121,100.942067]],
+    "ชุมชนบางพระน่าอยู่": [[13.211675,100.940714],[13.210442,100.943975],[13.219768,100.940503],[13.218652,100.939362],[13.211716,100.940563],[13.211675,100.940714]],
+    "ชุมชนพร้อมใจ": [[13.21705,100.938938],[13.217175,100.937607],[13.21705,100.936942],[13.213749,100.936942],[13.212141,100.936942],[13.21258,100.940998],[13.213162,100.941336],[13.217056,100.939194],[13.21705,100.938938]],
+    "ชุมชนท่าตาลักษณ์": [[13.210066,100.941186],[13.20921,100.9414],[13.208708,100.941787],[13.208332,100.942302],[13.208249,100.943031],[13.208562,100.943804],[13.20901,100.944063],[13.210129,100.943975],[13.211278,100.941315],[13.211833,100.94],[13.210651,100.939362],[13.210547,100.940456],[13.21038,100.940928],[13.210066,100.941186]]
+};
+
+var zoneColors = {
+    "ชุมชนคอเขาพัฒนา": "#8e24aa",
+    "ชุมชนท้ายบ้าน": "#8d6e63",
+    "ชุมชนทิวสนพัฒนา": "#3949ab",
+    "ชุมชนวัดหลวง": "#1e88e5",
+    "ชุมชนบ้านนาพุ": "#d81b60",
+    "ชุมชนตลาดบน": "#43a047",
+    "ชุมชนบางพระน่าอยู่": "#00acc1",
+    "ชุมชนพร้อมใจ": "#fb8c00",
+    "ชุมชนท่าตาลักษณ์": "#6d4c41"
+};
+
+function drawCommunityZones() {
+    zoneLayer = L.layerGroup().addTo(map);
+    Object.keys(communityZones).forEach(function(name){
+        var color = zoneColors[name] || "#999";
+        var poly = L.polygon(communityZones[name], {
+            color: color, weight: 2, opacity: 0.8,
+            fillColor: color, fillOpacity: 0.12
+        }).addTo(zoneLayer);
+        poly.bindTooltip(name, { sticky:true, className:'zone-tooltip' });
+    });
+}
+/* =====================================================
+   ข้อมูลจุดเสี่ยงภัย — ข้อมูลจริงจากแผนป้องกันฯ ทต.บางพระ ปี 2564-2570 (หน้า 16-17)
+   ตำแหน่งหมุดคำนวณจากจุดกึ่งกลางกรอบเขตชุมชนจริง (communityZones) ด้านบน
+   ===================================================== */
+var riskData = {
+    fire: [
+        { community:"ชุมชนวัดหลวง",     lat:13.210970, lng:100.936299, level:"high", reason:"ชุมชนแออัด รถน้ำดับเพลิงเข้าถึงยาก" },
+        { community:"ชุมชนท่าตาลักษณ์", lat:13.209787, lng:100.941771, level:"high", reason:"ชุมชนแออัด รถน้ำดับเพลิงเข้าถึงยาก" },
+        { community:"ชุมชนท้ายบ้าน",    lat:13.207659, lng:100.936901, level:"med",  reason:"เคยเกิดเหตุอัคคีภัยบางจุดในชุมชน" },
+        { community:"ชุมชนคอเขาพัฒนา",  lat:13.205957, lng:100.954523, level:"med",  reason:"เคยเกิดเหตุอัคคีภัยบางจุดในชุมชน" }
+    ],
+    flood: [
+        { community:"ชุมชนบ้านนาพุ",      lat:13.217844, lng:100.947542, level:"high", reason:"น้ำท่วมขังนาน รอการระบาย" },
+        { community:"ชุมชนทิวสนพัฒนา",   lat:13.217814, lng:100.955406, level:"med",  reason:"น้ำท่วมบางจุดในชุมชน" },
+        { community:"ชุมชนวัดหลวง",       lat:13.210970, lng:100.936299, level:"med",  reason:"น้ำท่วมบางจุดในชุมชน" },
+        { community:"ชุมชนท้ายบ้าน",      lat:13.207659, lng:100.936901, level:"med",  reason:"น้ำท่วมบางจุดในชุมชน" }
+    ]
+};
+
+var typeConfig = {
+    fire:  { color:"#e53935", icon:"fa-fire",  title:"จุดเสี่ยงไฟไหม้ตามชุมชน" },
+    flood: { color:"#1e88e5", icon:"fa-water", title:"จุดเสี่ยงน้ำท่วมตามชุมชน" }
+};
+
+function initRiskMap() {
+    map = L.map('riskMap').setView([13.2100, 100.9450], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(map);
+    drawCommunityZones();
+    markerLayer = L.layerGroup().addTo(map);
+    renderRiskType('fire');
+    setTimeout(function(){ map.invalidateSize(); }, 100);
+}
+
+function renderRiskType(type) {
+    currentType = type;
+    var cfg = typeConfig[type];
+    var list = riskData[type];
+
+    markerLayer.clearLayers();
+    currentMarkers = [];
+    list.forEach(function(item, idx){
+        var icon = L.divIcon({
+            html:'<div style="background:' + cfg.color + ';color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,.3);font-size:12px;"><i class="fa-solid ' + cfg.icon + '"></i></div>',
+            className:'custom-div-icon', iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-14]
+        });
+        var marker = L.marker([item.lat, item.lng], {icon:icon}).addTo(markerLayer);
+        marker.bindPopup(
+            '<h3 style="color:' + cfg.color + ';">' + item.community + '</h3>' +
+            '<p><strong>ระดับความเสี่ยง:</strong> ' + (item.level === 'high' ? 'สูง' : 'ปานกลาง') + '</p>' +
+            '<p>' + item.reason + '</p>'
+        );
+        currentMarkers[idx] = marker;
+    });
+
+    document.getElementById('listTitle').textContent = cfg.title;
+    renderRiskList(list, cfg.color, cfg.icon);
+}
+
+function renderRiskList(list, color, icon) {
+    var container = document.getElementById('riskListContainer');
+    var html = '';
+    list.forEach(function(item, idx){
+        var levelCls = item.level === 'high' ? 'risk-level-high' : 'risk-level-med';
+        var levelText = item.level === 'high' ? 'เสี่ยงสูง' : 'ปานกลาง';
+        html += '<div class="risk-list-item" onclick="focusOnRiskMarker(' + idx + ')" role="button" tabindex="0" aria-label="ดูตำแหน่ง ' + item.community + ' บนแผนที่">' +
+                '<div class="risk-list-icon" style="background:' + color + ';"><i class="fa-solid ' + icon + '" aria-hidden="true"></i></div>' +
+                '<div style="flex:1;">' +
+                '<div class="risk-list-title">' + item.community + '</div>' +
+                '<div class="risk-list-sub">' + item.reason + '</div>' +
+                '</div>' +
+                '<span class="risk-level-badge ' + levelCls + '">' + levelText + '</span>' +
+                '</div>';
+    });
+    container.innerHTML = html;
+}
+
+function focusOnRiskMarker(idx) {
+    var item = riskData[currentType][idx];
+    var marker = currentMarkers[idx];
+    if (!item || !marker) return;
+    document.getElementById('riskMap').scrollIntoView({ behavior:'smooth', block:'center' });
+    map.flyTo([item.lat, item.lng], 16, { animate:true, duration:0.8 });
+    setTimeout(function(){ marker.openPopup(); }, 600);
+}
+
+function switchRiskType(type) {
+    var btnFire  = document.getElementById('btnFire');
+    var btnFlood = document.getElementById('btnFlood');
+    if (type === 'fire') {
+        btnFire.classList.add('active');   btnFire.setAttribute('aria-selected','true');
+        btnFlood.classList.remove('active'); btnFlood.setAttribute('aria-selected','false');
+    } else {
+        btnFlood.classList.add('active');  btnFlood.setAttribute('aria-selected','true');
+        btnFire.classList.remove('active');  btnFire.setAttribute('aria-selected','false');
+    }
+    renderRiskType(type);
+}
+
+window.onload = function() { initRiskMap(); };
+</script>
+</body>
+</html>

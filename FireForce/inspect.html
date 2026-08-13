@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกการตรวจสอบถังดับเพลิง</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+</head>
+<body>
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="fire_extinguisher.html" class="back-arrow" aria-label="กลับหน้ารายการถัง">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">บันทึกการตรวจสอบ</div>
+                    <div class="header-page-sub">ถังดับเพลิง</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob">
+                    <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+        <!-- Tank info -->
+        <div class="header-tank-info">
+            <div class="header-tank-ic">
+                <i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div class="header-tank-id" id="tankIdLabel">รหัสถัง: —</div>
+                <div class="header-tank-loc" id="tankLocationLabel">กำลังโหลด...</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top:16px;">
+        <div class="section-box">
+            <h3 style="font-size:var(--fs-base);margin-bottom:16px;padding-bottom:12px;border-bottom:0.5px solid var(--divider);color:var(--text-primary);font-weight:700;">
+                รายละเอียดการตรวจเช็ค
+            </h3>
+
+            <div class="input-group">
+                <label for="inspectorName">ชื่อผู้ตรวจสอบ</label>
+                <input type="text" id="inspectorName" class="custom-input"
+                       placeholder="กรอกชื่อ-นามสกุล" autocomplete="name">
+            </div>
+
+            <div class="input-group">
+                <label for="inspectDate">วันที่ตรวจสอบ</label>
+                <input type="date" id="inspectDate" class="custom-input">
+            </div>
+
+            <div class="input-group">
+                <label>สภาพถังดับเพลิง</label>
+                <div class="radio-group" role="radiogroup" aria-label="สภาพถังดับเพลิง">
+                    <label class="radio-card">
+                        <input type="radio" name="status" value="พร้อมใช้งาน" checked>
+                        <span class="radio-content">
+                            <i class="fa-solid fa-circle-check text-success" aria-hidden="true"></i>
+                            พร้อมใช้งาน
+                        </span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="status" value="ชำรุด">
+                        <span class="radio-content">
+                            <i class="fa-solid fa-triangle-exclamation text-red" aria-hidden="true"></i>
+                            ชำรุด
+                        </span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="status" value="สูญหาย">
+                        <span class="radio-content">
+                            <i class="fa-solid fa-ghost" aria-hidden="true" style="color:var(--text-muted);"></i>
+                            สูญหาย
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="notes">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+                <textarea id="notes" class="custom-input" rows="3"
+                          placeholder="เช่น สลักหาย, สายฉีดขาด..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>
+                    <i class="fa-solid fa-camera" style="color:var(--accent);margin-right:6px;" aria-hidden="true"></i>
+                    ภาพถ่ายถังดับเพลิง
+                </label>
+                <label for="cameraInput" class="camera-upload-box" id="uploadBox">
+                    <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                    <span>แตะเพื่อถ่ายรูป</span>
+                </label>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment"
+                       style="display:none;" aria-label="ถ่ายรูปถังดับเพลิง">
+                <div id="imagePreviewContainer" class="image-preview-container" style="display:none;">
+                    <img id="imagePreview" src="" alt="ภาพถ่ายถังดับเพลิง">
+                    <button type="button" class="remove-img-btn" id="removeImgBtn" aria-label="ลบรูปภาพ">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-navy" id="submitInspectBtn" type="button" style="margin-top:8px;">
+                <i class="fa-solid fa-cloud-arrow-up" id="submitIcon" aria-hidden="true"></i>
+                <span id="submitBtnText">บันทึกข้อมูลการตรวจ</span>
+            </button>
+
+            <p style="text-align:center;font-size:var(--fs-xs);color:var(--text-muted);margin-top:10px;">
+                <i class="fa-solid fa-table" style="margin-right:5px;" aria-hidden="true"></i>
+                ข้อมูลจะถูกบันทึกลง Google Sheets อัตโนมัติ
+            </p>
+        </div>
+    </main>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+// ตัวแปรสำหรับเก็บข้อมูลรูปภาพที่แปลงเป็น Base64 แล้ว
+var currentBase64 = '';
+
+(function loadTankInfo(){
+    var params   = new URLSearchParams(window.location.search);
+    var tankId   = params.get('id')   || '—';
+    var tankName = params.get('name') || 'ไม่ระบุสถานที่';
+    document.getElementById('tankIdLabel').textContent      = 'รหัสถัง: ' + tankId;
+    document.getElementById('tankLocationLabel').textContent = tankName;
+})();
+
+document.getElementById('inspectDate').valueAsDate = new Date();
+
+document.getElementById('cameraInput').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('imagePreview').src = URL.createObjectURL(file);
+    document.getElementById('uploadBox').style.display = 'none';
+    document.getElementById('imagePreviewContainer').style.display = 'block';
+
+    // ใช้ FileReader แปลงรูปเป็น Base64 เพื่อส่งไปเก็บที่ backend
+    // (เดิมจุดนี้ขาดไป ทำให้ imageUrl ที่ส่งไปเป็นค่าว่างเสมอ)
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        // ตัดคำนำหน้า "data:image/jpeg;base64," ออก เอาเฉพาะข้อมูล Base64 จริงๆ
+        currentBase64 = event.target.result.split(',')[1];
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('removeImgBtn').addEventListener('click', function() {
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('uploadBox').style.display = 'flex';
+    currentBase64 = ''; // เคลียร์ค่า Base64 ทิ้งเมื่อผู้ใช้กดยกเลิกรูปภาพ
+});
+
+function resetBtn() {
+    var btn = document.getElementById('submitInspectBtn');
+    btn.disabled = false; btn.style.opacity = '1';
+    document.getElementById('submitBtnText').textContent = 'บันทึกข้อมูลการตรวจ';
+    document.getElementById('submitIcon').className = 'fa-solid fa-cloud-arrow-up';
+}
+
+document.getElementById('submitInspectBtn').addEventListener('click', async function() {
+    var name   = document.getElementById('inspectorName').value.trim();
+    var result = document.querySelector('input[name="status"]:checked').value;
+    var notes  = document.getElementById('notes').value.trim();
+    var date   = document.getElementById('inspectDate').value;
+    var tankId = document.getElementById('tankIdLabel').textContent.replace('รหัสถัง: ', '');
+    if (!name) { showToast('กรุณากรอกชื่อผู้ตรวจสอบ', 'error'); document.getElementById('inspectorName').focus(); return; }
+    var btn = document.getElementById('submitInspectBtn');
+    btn.disabled = true; btn.style.opacity = '0.7';
+    document.getElementById('submitBtnText').textContent = 'กำลังบันทึก...';
+    document.getElementById('submitIcon').className = 'fa-solid fa-spinner fa-spin';
+    showToast('กำลังบันทึกข้อมูล...', 'info');
+    try {
+        var res = await fetch(SCRIPT_URL, {
+            method:'POST',
+            body:JSON.stringify({ type:'inspect', equipmentId:tankId, inspectorName:name, result:result, notes:notes, date:date, imageUrl:currentBase64 }),
+        });
+        var json = await res.json();
+        if (json.success) {
+            showToast('บันทึกสำเร็จ! ข้อมูลอยู่ใน Google Sheets', 'success');
+            setTimeout(function(){ window.location.href = 'fire_extinguisher.html'; }, 1800);
+        } else {
+            showToast('เกิดข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'), 'error');
+            resetBtn();
+        }
+    } catch(err) {
+        showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+        resetBtn();
+    }
+});
+</script>
+</body>
+</html>

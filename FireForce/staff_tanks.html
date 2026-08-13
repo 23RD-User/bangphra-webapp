@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ถังดับเพลิง — เจ้าหน้าที่</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        .app-header .header-org-name{font-size:18px !important;font-weight:800 !important}
+        .app-header .header-org-sub{font-size:13px !important}
+        .app-header .header-logo-icon{width:40px !important;height:40px !important;border-radius:12px !important}
+        .app-header .header-logo-icon i{font-size:19px !important}
+
+        .view-toggle{display:flex;background:var(--bg-card);border-radius:var(--radius-sm);padding:4px;margin-bottom:14px;border:0.5px solid var(--border)}
+        .view-btn{flex:1;padding:10px;border:none;border-radius:10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;background:transparent;color:var(--text-muted);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+        .view-btn.on{background:var(--navy);color:white;box-shadow:0 2px 8px rgba(28,43,74,.25)}
+
+        .stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+        .stat-strip-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;border:0.5px solid var(--border);box-shadow:var(--shadow-sm)}
+        .stat-strip-num{font-size:22px;font-weight:800;line-height:1;display:block}
+        .stat-strip-lbl{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:3px}
+
+        #staffMap{width:100%;height:55vh;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-md)}
+        .leaflet-popup-content-wrapper{font-family:'Sarabun',sans-serif;border-radius:12px}
+        .leaflet-popup-content h3{font-size:15px;font-weight:700;margin:0 0 4px}
+        .leaflet-popup-content p{font-size:13px;margin:2px 0}
+        .map-tip{text-align:center;font-size:var(--fs-xs);color:var(--text-muted);margin-top:10px;margin-bottom:4px}
+
+        .urgent-box{background:#FFEBEE;border-radius:var(--radius-md);padding:12px 14px;margin-bottom:16px;border:1.5px solid #FFCDD2}
+        .urgent-box-title{font-size:var(--fs-sm);font-weight:700;color:#C62828;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .citizen-box{background:#FFF8E1;border-radius:var(--radius-md);padding:12px 14px;margin-bottom:16px;border:1.5px solid #FFE082}
+        .citizen-box-title{font-size:var(--fs-sm);font-weight:700;color:#E8A413;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .citizen-report-card{display:flex;gap:10px;align-items:center;background:white;border-radius:var(--radius-sm);padding:10px;margin-bottom:8px}
+        .citizen-report-card:last-child{margin-bottom:0}
+        .citizen-report-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg-light)}
+        .tank-card{background:var(--bg-card);border-radius:var(--radius-md);padding:13px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;border:0.5px solid var(--border);box-shadow:var(--shadow-sm);transition:border-color .2s,transform .15s}
+        .tank-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+        .tank-icon{width:44px;height:44px;background:var(--accent-light);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .tank-icon i{color:var(--accent);font-size:20px}
+        .tank-title{font-size:var(--fs-base);font-weight:700;color:var(--text-primary);margin-bottom:2px}
+        .tank-sub{font-size:var(--fs-xs);color:var(--text-muted)}
+        .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700;margin-top:4px}
+        .pill-ok{background:#E8F5E9;color:#2E7D32}
+        .pill-warn{background:#FFF8E1;color:#F57F17}
+        .pill-bad{background:#FFEBEE;color:#C62828}
+        .pill-lost{background:#424242;color:white}
+        .btn-fix{padding:7px 14px;border:none;border-radius:9px;font-size:var(--fs-xs);font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;background:var(--accent);color:white;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s}
+        .btn-fix:hover{opacity:.85}
+        .btn-inspect-link{padding:7px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:var(--fs-xs);font-weight:700;font-family:'Sarabun',sans-serif;background:var(--bg-card);color:var(--text-secondary);display:inline-flex;align-items:center;gap:5px;text-decoration:none;transition:border-color .2s}
+        .btn-inspect-link:hover{border-color:var(--accent);color:var(--accent)}
+
+        .btn-print-qr{width:100%;padding:12px;border:1.5px dashed var(--accent);border-radius:var(--radius-sm);background:var(--accent-light);color:var(--accent);font-size:var(--fs-sm);font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;transition:opacity .15s}
+        .btn-print-qr:hover{opacity:.85}
+
+        .qr-print-area{display:none}
+        .qr-print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:16px}
+        .qr-print-item{text-align:center;border:1px solid #ccc;padding:10px;page-break-inside:avoid}
+        .qr-code-box{display:flex;justify-content:center;margin-bottom:6px}
+        .qr-label-id{font-weight:700;font-size:13px;font-family:'Sarabun',sans-serif;}
+        .qr-label-loc{font-size:11px;color:#555;font-family:'Sarabun',sans-serif;}
+        @media print {
+            body * { visibility: hidden; }
+            .qr-print-area, .qr-print-area * { visibility: visible; }
+            .qr-print-area { display:block; position:absolute; top:0; left:0; width:100%; }
+        }
+
+        .staff-bottom-nav{position:sticky;bottom:0;width:100%;background:var(--bg-card);display:flex;justify-content:space-around;padding:10px 0 14px;border-top:0.5px solid var(--border);z-index:50}
+        .snav-item{display:flex;flex-direction:column;align-items:center;color:var(--text-muted);font-size:var(--fs-xs);gap:4px;min-width:60px;font-weight:600;transition:color .2s;text-decoration:none}
+        .snav-item.active{color:var(--accent)}
+        .snav-item i{font-size:20px}
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="staff_dashboard.html" class="back-arrow" aria-label="กลับ Dashboard">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">ถังดับเพลิง</div>
+                    <div class="header-page-sub">จัดการสถานะ</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob"><i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i><i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top:16px;">
+
+        <div class="stat-strip">
+            <div class="stat-strip-card">
+                <span class="stat-strip-num" style="color:#2E7D32;" id="statOk">—</span>
+                <span class="stat-strip-lbl">พร้อมใช้</span>
+            </div>
+            <div class="stat-strip-card">
+                <span class="stat-strip-num" style="color:#C62828;" id="statIssue">—</span>
+                <span class="stat-strip-lbl">ต้องซ่อม</span>
+            </div>
+            <div class="stat-strip-card">
+                <span class="stat-strip-num" style="color:var(--text-primary);" id="statTotal">—</span>
+                <span class="stat-strip-lbl">ทั้งหมด</span>
+            </div>
+        </div>
+
+        <div class="view-toggle" role="group" aria-label="เลือกรูปแบบการแสดงผล">
+            <button class="view-btn" id="btnList" onclick="switchView('list')" aria-pressed="false">
+                <i class="fa-solid fa-list" aria-hidden="true"></i> รายการ
+            </button>
+            <button class="view-btn on" id="btnMap" onclick="switchView('map')" aria-pressed="true">
+                <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> แผนที่
+            </button>
+        </div>
+
+        <div id="mapView">
+            <div id="staffMap"></div>
+            <p class="map-tip">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                แตะที่หมุดเพื่อดูรายละเอียด — สีแสดงสถานะถัง
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--text-secondary);font-weight:600;">
+                    <div style="width:12px;height:12px;background:#2E7D32;border-radius:50%;flex-shrink:0;"></div>พร้อมใช้งาน
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--text-secondary);font-weight:600;">
+                    <div style="width:12px;height:12px;background:#F57F17;border-radius:50%;flex-shrink:0;"></div>หมดอายุ
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--text-secondary);font-weight:600;">
+                    <div style="width:12px;height:12px;background:#C62828;border-radius:50%;flex-shrink:0;"></div>ชำรุด
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--text-secondary);font-weight:600;">
+                    <div style="width:12px;height:12px;background:#424242;border-radius:50%;flex-shrink:0;"></div>สูญหาย
+                </div>
+            </div>
+        </div>
+
+        <div id="listView" style="display:none;">
+            <div style="position:relative;margin-bottom:14px;">
+                <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--text-muted);z-index:1;"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="search" id="searchInput" class="custom-input" placeholder="ค้นหารหัสถัง หรือ สถานที่..." style="padding-left:44px;" aria-label="ค้นหาถัง">
+            </div>
+
+            <button class="btn-print-qr" onclick="printAllQR()">
+                <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                พิมพ์ QR ถังดับเพลิงทั้งหมด
+            </button>
+
+            <div class="citizen-box" id="citizenBox" style="display:none;">
+                <div class="citizen-box-title">
+                    <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>ประชาชนแจ้งเข้ามาใหม่
+                </div>
+                <div id="citizenReportList"></div>
+            </div>
+
+            <div class="urgent-box">
+                <div class="urgent-box-title">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>ต้องดำเนินการด่วน
+                </div>
+                <div id="urgentTankList">
+                    <div style="text-align:center;padding:16px;color:var(--text-muted);">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-hd" style="margin-bottom:10px;">
+                <div class="section-hd-left">
+                    <i class="fa-solid fa-list" aria-hidden="true"></i>รายการทั้งหมด
+                </div>
+                <a href="inspect.html" class="section-hd-all">+ บันทึกตรวจสอบ</a>
+            </div>
+            <div id="tankList"></div>
+        </div>
+
+    </main>
+
+    <div class="qr-print-area" id="qrPrintArea"></div>
+
+    <nav class="staff-bottom-nav" aria-label="เมนูเจ้าหน้าที่">
+        <a href="staff_dashboard.html" class="snav-item"><i class="fa-solid fa-house" aria-hidden="true"></i><span>หน้าหลัก</span></a>
+        <a href="staff_reports.html" class="snav-item"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span>ร้องเรียน</span></a>
+        <a href="staff_tanks.html" class="snav-item active" aria-current="page"><i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i><span>ถัง</span></a>
+    </nav>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+var communityColors = {
+    "ชุมชนคอเขาพัฒนา":"#e53935","ชุมชนวัดหลวง":"#1e88e5",
+    "ชุมชนตลาดบน":"#43a047","ชุมชนพร้อมใจ":"#fb8c00",
+    "ชุมชนท่าตาลักษณ์":"#8e24aa","ชุมชนบางพระน่าอยู่":"#00acc1",
+    "ชุมชนบ้านนาพุ":"#d81b60","ชุมชนทิวสนพัฒนา":"#3949ab",
+    "ชุมชนท้ายบ้าน":"#8d6e63"
+};
+
+var communityZones = [
+    { name:"ชุมชนท่าตาลักษณ์", color:communityColors["ชุมชนท่าตาลักษณ์"],
+      coords:[[13.210066,100.941186],[13.20921,100.9414],[13.208708,100.941787],[13.208332,100.942302],[13.208249,100.943031],[13.208562,100.943804],[13.20901,100.944063],[13.210129,100.943975],[13.211278,100.941315],[13.211833,100.94],[13.210651,100.939362],[13.210547,100.940456],[13.21038,100.940928],[13.210066,100.941186]] },
+    { name:"ชุมชนวัดหลวง", color:communityColors["ชุมชนวัดหลวง"],
+      coords:[[13.208811,100.935051],[13.210075,100.937433],[13.20996,100.939064],[13.210221,100.939772],[13.211819,100.93975],[13.211652,100.937562],[13.212028,100.936425],[13.212268,100.935395],[13.212582,100.934815],[13.212425,100.93444],[13.211746,100.934386],[13.211057,100.934418],[13.210127,100.934622],[13.208811,100.935051]] },
+    { name:"ชุมชนคอเขาพัฒนา", color:communityColors["ชุมชนคอเขาพัฒนา"],
+      coords:[[13.210082,100.946404],[13.20394,100.942627],[13.1983,100.95872],[13.201809,100.960137],[13.204776,100.962197],[13.207074,100.962583],[13.208411,100.960952],[13.207909,100.956446],[13.206238,100.954729],[13.206907,100.948549],[13.210082,100.946404]] },
+    { name:"ชุมชนท้ายบ้าน", color:communityColors["ชุมชนท้ายบ้าน"],
+      coords:[[13.206239,100.937412],[13.206291,100.937809],[13.206834,100.937664],[13.207633,100.938002],[13.208939,100.937632],[13.209414,100.937702],[13.210025,100.937605],[13.209111,100.935953],[13.208683,100.935095],[13.207983,100.935309],[13.207001,100.93584],[13.206547,100.936323],[13.206286,100.936859],[13.206239,100.937412]] },
+    { name:"ชุมชนทิวสนพัฒนา", color:communityColors["ชุมชนทิวสนพัฒนา"],
+      coords:[[13.212909,100.948317],[13.211509,100.948692],[13.212867,100.954443],[13.214403,100.95676],[13.21645,100.961974],[13.221007,100.962759],[13.222678,100.963049],[13.223795,100.959154],[13.223482,100.95585],[13.222333,100.953167],[13.21943,100.952395],[13.212909,100.948317]] },
+    { name:"ชุมชนบ้านนาพุ", color:communityColors["ชุมชนบ้านนาพุ"],
+      coords:[[13.213232,100.946578],[13.212877,100.947972],[13.219472,100.952],[13.222152,100.9528],[13.223238,100.952843],[13.222883,100.949904],[13.222736,100.948273],[13.220501,100.94765],[13.219749,100.947715],[13.219373,100.94808],[13.218245,100.947844],[13.218433,100.946663],[13.218036,100.946213],[13.216365,100.945655],[13.215822,100.944797],[13.214694,100.94396],[13.214047,100.943337],[13.213942,100.944432],[13.213232,100.946578]] },
+    { name:"ชุมชนตลาดบน", color:communityColors["ชุมชนตลาดบน"],
+      coords:[[13.222121,100.942067],[13.220513,100.940737],[13.210549,100.944363],[13.211739,100.945157],[13.21458,100.943805],[13.215667,100.944299],[13.216356,100.9455],[13.217902,100.945994],[13.222121,100.942067]] },
+    { name:"ชุมชนบางพระน่าอยู่", color:communityColors["ชุมชนบางพระน่าอยู่"],
+      coords:[[13.211675,100.940714],[13.210442,100.943975],[13.219768,100.940503],[13.218652,100.939362],[13.211716,100.940563],[13.211675,100.940714]] },
+    { name:"ชุมชนพร้อมใจ", color:communityColors["ชุมชนพร้อมใจ"],
+      coords:[[13.21705,100.938938],[13.217175,100.937607],[13.21705,100.936942],[13.213749,100.936942],[13.212141,100.936942],[13.21258,100.940998],[13.213162,100.941336],[13.217056,100.939194],[13.21705,100.938938]] }
+];
+
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+var TANKS = [];
+
+var statusMap = {
+    'พร้อมใช้งาน': 'ok',
+    'รอตรวจสอบ':   'warn',
+    'ชำรุด':       'bad',
+    'สูญหาย':      'lost',
+};
+
+var statusCfg={
+    ok:  {label:'พร้อมใช้งาน',cls:'pill-ok',  color:'#2E7D32'},
+    warn:{label:'รอตรวจสอบ',  cls:'pill-warn', color:'#F57F17'},
+    bad: {label:'ชำรุด',      cls:'pill-bad',  color:'#C62828'},
+    lost:{label:'สูญหาย',     cls:'pill-lost', color:'#424242'},
+};
+
+function loadTanks() {
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 10000);
+
+    fetch(SCRIPT_URL, { signal: controller.signal })
+        .then(function(res){ clearTimeout(timeoutId); return res.json(); })
+        .then(function(data){
+            if (!Array.isArray(data)) throw new Error('invalid data');
+            TANKS = data.map(function(item){
+                var rawStatus = item.Status || 'พร้อมใช้งาน';
+                return {
+                    id: item.ID || '—',
+                    location: item.Location_Name || 'ไม่ระบุสถานที่',
+                    community: item.Community || '—',
+                    status: statusMap[rawStatus] || 'ok',
+                    statusRaw: rawStatus,
+                    lat: parseFloat(item.Latitude),
+                    lng: parseFloat(item.Longitude),
+                    imageUrl: (item.ImageUrl && item.ImageUrl.indexOf('อัปโหลดรูปล้มเหลว') === -1) ? item.ImageUrl : '',
+                };
+            });
+            updateStatStrip();
+            renderUrgentList();
+            renderList(TANKS);
+            if (map) refreshMapMarkers();
+            loadCitizenReports();
+        })
+        .catch(function(err){
+            clearTimeout(timeoutId);
+            var msg = (err && err.name === 'AbortError')
+                ? 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่'
+                : 'ไม่สามารถโหลดข้อมูลถังได้';
+            showToast(msg, 'error');
+            document.getElementById('tankList').innerHTML =
+                '<p style="text-align:center;color:var(--text-muted);padding:20px;">'+msg+'</p>'+
+                '<div style="text-align:center;"><button class="btn-fix" style="padding:8px 16px;" onclick="loadTanks()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> โหลดใหม่</button></div>';
+            document.getElementById('urgentTankList').innerHTML =
+                '<p style="text-align:center;color:var(--text-muted);padding:12px;font-size:var(--fs-sm);">ไม่สามารถโหลดข้อมูลได้</p>';
+            document.getElementById('statOk').textContent    = '—';
+            document.getElementById('statIssue').textContent = '—';
+            document.getElementById('statTotal').textContent = '—';
+        });
+}
+
+var CITIZEN_REPORT_IDS = [];
+
+function loadCitizenReports() {
+    fetch(SCRIPT_URL + '?type=getTankIssueReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            if (!data.success || !data.reports) { CITIZEN_REPORT_IDS = []; return; }
+            CITIZEN_REPORT_IDS = data.reports.map(function(r){ return r.equipmentId; });
+            renderCitizenReports(data.reports);
+            if (map) refreshMapMarkers();
+        })
+        .catch(function(){ /* ไม่ critical ต่อการใช้งานหลัก ปล่อยผ่านเงียบๆ */ });
+}
+
+function renderCitizenReports(reports) {
+    var box = document.getElementById('citizenBox');
+    var list = document.getElementById('citizenReportList');
+    if (!reports || reports.length === 0) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    list.innerHTML = reports.map(function(r){
+        var tank = TANKS.find(function(t){ return t.id === r.equipmentId; });
+        var loc = tank ? tank.location : '';
+        var thumb = r.imageUrl
+            ? '<img class="citizen-report-thumb" src="'+r.imageUrl+'" alt="">'
+            : '<div class="citizen-report-thumb" style="display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-image" style="color:var(--text-muted);"></i></div>';
+        return '<div class="citizen-report-card">' + thumb +
+            '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:var(--fs-sm);font-weight:700;">'+r.equipmentId+(loc?' — '+loc:'')+'</div>' +
+            '<div style="font-size:var(--fs-xs);color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(r.description||'ไม่มีคำอธิบาย')+'</div>' +
+            '</div>' +
+            '<a href="inspect.html?id='+encodeURIComponent(r.equipmentId)+'" class="btn-fix" style="text-decoration:none;white-space:nowrap;padding:6px 10px;">ไปที่ถังนี้</a>' +
+            '</div>';
+    }).join('');
+}
+
+function updateStatStrip() {
+    var ok    = TANKS.filter(function(t){ return t.status === 'ok'; }).length;
+    var issue = TANKS.filter(function(t){ return t.status === 'bad' || t.status === 'lost'; }).length;
+    document.getElementById('statOk').textContent    = ok;
+    document.getElementById('statIssue').textContent = issue;
+    document.getElementById('statTotal').textContent = TANKS.length;
+}
+
+function renderUrgentList() {
+    var urgent = TANKS.filter(function(t){ return t.status === 'bad' || t.status === 'lost' || t.status === 'warn'; }).slice(0, 5);
+    var container = document.getElementById('urgentTankList');
+    if (urgent.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:12px;font-size:var(--fs-sm);">ไม่มีรายการต้องดำเนินการด่วน</p>';
+        return;
+    }
+    container.innerHTML = urgent.map(function(t, idx){
+        var cfg = statusCfg[t.status] || statusCfg.ok;
+        var btnLabel = t.status === 'warn' ? 'ตรวจสอบ' : 'ซ่อม';
+        var btnIcon  = t.status === 'warn' ? 'fa-clipboard-check' : 'fa-wrench';
+        return '<div class="tank-card" style="margin-bottom:'+(idx<urgent.length-1?'8px':'0')+';border:none;background:white;">' +
+            '<div class="tank-icon" style="background:'+cfg.color+'1A;"><i class="fa-solid fa-fire-extinguisher" style="color:'+cfg.color+';font-size:20px;" aria-hidden="true"></i></div>' +
+            '<div style="flex:1;">' +
+            '<div class="tank-title">'+t.id+' — '+t.location+'</div>' +
+            '<div class="tank-sub">'+t.community+'</div>' +
+            '<span class="pill '+cfg.cls+'">'+cfg.label+'</span>' +
+            '</div>' +
+            '<button class="btn-fix" onclick="markAsFixed(\''+t.id+'\')">' +
+            '<i class="fa-solid '+btnIcon+'" aria-hidden="true"></i> '+btnLabel +
+            '</button>' +
+        '</div>';
+    }).join('');
+}
+
+/* =====================================================
+   อัปเดตสถานะถังตรง — เขียนกลับเข้า Sheets จริง
+   แนบ token ไปด้วยทุกครั้ง เพราะ backend เช็คสิทธิ์แล้วก่อนแก้ข้อมูล
+   ===================================================== */
+function markAsFixed(equipmentId) {
+    var tank = TANKS.find(function(t){ return t.id === equipmentId; });
+    var label = tank ? (equipmentId + ' — ' + tank.location) : equipmentId;
+    var confirmed = window.confirm('ยืนยันตั้งสถานะถัง "' + label + '" เป็น "พร้อมใช้งาน" ใช่ไหม?');
+    if (!confirmed) return;
+
+    showToast('กำลังบันทึก...', 'info');
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 10000);
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        signal: controller.signal,
+        body: JSON.stringify({
+            type: 'updateTank',
+            equipmentId: equipmentId,
+            status: 'พร้อมใช้งาน',
+            token: sessionStorage.getItem('staffToken') || '',
+        }),
+    })
+    .then(function(res){ clearTimeout(timeoutId); return res.json(); })
+    .then(function(data){
+        if (data.success) {
+            showToast('บันทึกสำเร็จ — ' + equipmentId + ' พร้อมใช้งานแล้ว', 'success');
+            loadTanks();
+        } else if (data.message && data.message.indexOf('เข้าสู่ระบบใหม่') > -1) {
+            showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error');
+            setTimeout(function(){ window.location.href = 'login.html'; }, 1500);
+        } else {
+            showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+        }
+    })
+    .catch(function(err){
+        clearTimeout(timeoutId);
+        var msg = (err && err.name === 'AbortError')
+            ? 'การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่'
+            : 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่';
+        showToast(msg, 'error');
+    });
+}
+
+function printAllQR() {
+    if (!TANKS || TANKS.length === 0) {
+        showToast('ยังไม่มีข้อมูลถังให้สร้าง QR กรุณารอข้อมูลโหลดเสร็จก่อน', 'error');
+        return;
+    }
+    if (typeof QRCode === 'undefined') {
+        showToast('โหลดตัวสร้าง QR ไม่สำเร็จ กรุณาเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่', 'error');
+        return;
+    }
+    var area = document.getElementById('qrPrintArea');
+    area.innerHTML = '<div class="qr-print-grid" id="qrPrintGrid"></div>';
+    var grid = document.getElementById('qrPrintGrid');
+
+    TANKS.forEach(function(t){
+        var item = document.createElement('div');
+        item.className = 'qr-print-item';
+
+        var qrBox = document.createElement('div');
+        qrBox.className = 'qr-code-box';
+        item.appendChild(qrBox);
+
+        var idLabel = document.createElement('div');
+        idLabel.className = 'qr-label-id';
+        idLabel.textContent = t.id;
+        item.appendChild(idLabel);
+
+        var locLabel = document.createElement('div');
+        locLabel.className = 'qr-label-loc';
+        locLabel.textContent = t.location;
+        item.appendChild(locLabel);
+
+        grid.appendChild(item);
+        new QRCode(qrBox, { text: t.id, width: 100, height: 100 });
+    });
+
+    showToast('กำลังเตรียมพิมพ์ QR ' + TANKS.length + ' รายการ...', 'info');
+    setTimeout(function(){ window.print(); }, 300);
+}
+
+var map=null;
+var markerLayer=null;
+function initMap(){
+    if(map) return;
+    var el = document.getElementById('staffMap');
+    if (el.offsetWidth === 0 || el.offsetHeight === 0) {
+        setTimeout(initMap, 100);
+        return;
+    }
+    map=L.map('staffMap').setView([13.2120,100.9411],14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+    communityZones.forEach(function(zone){
+        L.polygon(zone.coords, { color:zone.color, fillColor:zone.color, fillOpacity:0.15, weight:2, dashArray:'5,5' })
+         .addTo(map).bindPopup('<div style="text-align:center;font-family:Sarabun,sans-serif;"><b>เขต' + zone.name + '</b></div>');
+    });
+    markerLayer=L.layerGroup().addTo(map);
+    refreshMapMarkers();
+    setTimeout(function(){ if(map) map.invalidateSize(); }, 100);
+    setTimeout(function(){ if(map) map.invalidateSize(); }, 400);
+}
+
+function refreshMapMarkers(){
+    if (!markerLayer) return;
+    markerLayer.clearLayers();
+    TANKS.forEach(function(t){
+        if (isNaN(t.lat) || isNaN(t.lng)) return;
+        var cfg=statusCfg[t.status]||statusCfg.ok;
+        var isReported = CITIZEN_REPORT_IDS.indexOf(t.id) !== -1;
+        var ringStyle = isReported ? 'border:3px solid #FFC107;box-shadow:0 0 0 3px #FFF3CD,0 2px 6px rgba(0,0,0,.3);' : 'border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);';
+        var icon=L.divIcon({
+            html:'<div style="background:'+cfg.color+';color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;'+ringStyle+'font-size:13px;"><i class="fa-solid fa-fire-extinguisher"></i></div>',
+            className:'',iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-16]
+        });
+        var inspectUrl='inspect.html?id='+encodeURIComponent(t.id)+'&name='+encodeURIComponent(t.location);
+        var mapsUrl='https://maps.google.com/?q='+t.lat+','+t.lng;
+        L.marker([t.lat,t.lng],{icon:icon}).addTo(markerLayer).bindPopup(
+            '<h3 style="color:'+cfg.color+'">'+t.id+'</h3>'+
+            '<p><strong>สถานที่:</strong> '+t.location+'</p>'+
+            '<p><strong>ชุมชน:</strong> '+t.community+'</p>'+
+            '<p><strong>สถานะ:</strong> <span style="color:'+cfg.color+';font-weight:bold;">'+cfg.label+'</span></p>'+
+            (isReported ? '<p style="color:#E8A413;font-weight:bold;"><i class="fa-solid fa-comment-dots"></i> ประชาชนแจ้งปัญหาเข้ามา รอตรวจสอบ</p>' : '')+
+            '<div style="display:flex;gap:6px;margin-top:8px;">'+
+            '<a href="'+inspectUrl+'" style="padding:6px 10px;background:#1C2B4A;color:white;text-decoration:none;border-radius:7px;font-size:12px;font-weight:700;font-family:Sarabun,sans-serif;"><i class="fa-solid fa-clipboard-check"></i> ตรวจสอบ</a>'+
+            '<a href="'+mapsUrl+'" target="_blank" rel="noopener" style="padding:6px 10px;background:'+cfg.color+';color:white;text-decoration:none;border-radius:7px;font-size:12px;font-weight:700;font-family:Sarabun,sans-serif;"><i class="fa-solid fa-diamond-turn-right"></i> นำทาง</a>'+
+            '</div>'
+        );
+    });
+}
+
+function renderList(list){
+    var container = document.getElementById('tankList');
+    if (!list.length) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">ไม่พบรายการถัง</p>';
+        return;
+    }
+    container.innerHTML=list.map(function(t){
+        var cfg=statusCfg[t.status]||statusCfg.ok;
+        var inspectUrl='inspect.html?id='+encodeURIComponent(t.id)+'&name='+encodeURIComponent(t.location);
+        var fixBtn = (t.status==='bad' || t.status==='lost' || t.status==='warn')
+            ? '<button class="btn-fix" style="padding:6px 10px;" onclick="markAsFixed(\''+t.id+'\')" aria-label="ตั้งเป็นพร้อมใช้งาน"><i class="fa-solid fa-check" aria-hidden="true"></i></button>'
+            : '';
+        var iconHtml = t.imageUrl
+            ? '<img src="'+t.imageUrl+'" alt="ภาพถังดับเพลิง" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">'
+            : '<i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i>';
+        var iconClickAttr = t.imageUrl ? ' onclick="openImageLightbox(\''+t.imageUrl+'\')" style="overflow:hidden;cursor:zoom-in;"' : ' style="overflow:hidden;"';
+        return '<div class="tank-card">'+
+            '<div class="tank-icon"'+iconClickAttr+'>'+iconHtml+'</div>'+
+            '<div style="flex:1;">'+
+            '<div class="tank-title">'+t.id+' — '+t.location+'</div>'+
+            '<div class="tank-sub">'+t.community+'</div>'+
+            '<span class="pill '+cfg.cls+'">'+cfg.label+'</span>'+
+            '</div>'+
+            fixBtn+
+            '<a href="'+inspectUrl+'" class="btn-inspect-link" aria-label="ตรวจสอบ '+t.id+'"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></a>'+
+        '</div>';
+    }).join('');
+}
+
+function switchView(view){
+    var isList=view==='list';
+    document.getElementById('listView').style.display=isList?'block':'none';
+    document.getElementById('mapView').style.display=isList?'none':'block';
+    document.getElementById('btnList').classList.toggle('on',isList);
+    document.getElementById('btnList').setAttribute('aria-pressed',isList?'true':'false');
+    document.getElementById('btnMap').classList.toggle('on',!isList);
+    document.getElementById('btnMap').setAttribute('aria-pressed',!isList?'true':'false');
+    if(!isList){
+        initMap();
+        setTimeout(function(){if(map)map.invalidateSize();},100);
+        setTimeout(function(){if(map)map.invalidateSize();},300);
+        setTimeout(function(){if(map)map.invalidateSize();},600);
+    }
+}
+
+document.getElementById('searchInput').addEventListener('input',function(){
+    var q=this.value.toLowerCase();
+    renderList(TANKS.filter(function(t){return(t.id+t.location+t.community).toLowerCase().indexOf(q)>-1;}));
+});
+
+loadTanks();
+
+function openImageLightbox(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('imageLightbox').style.display = 'flex';
+}
+function closeImageLightbox() {
+    document.getElementById('imageLightbox').style.display = 'none';
+    document.getElementById('lightboxImg').src = '';
+}
+</script>
+
+<!-- Lightbox: ดูรูปถังดับเพลิงแบบเต็มจอ -->
+<div id="imageLightbox" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this) closeImageLightbox();">
+    <button onclick="closeImageLightbox()" aria-label="ปิด" style="position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:40px;height:40px;color:#fff;font-size:20px;cursor:pointer;">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+    <img id="lightboxImg" src="" alt="ภาพถังดับเพลิงขนาดเต็ม" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;">
+</div>
+</body>
+</html>

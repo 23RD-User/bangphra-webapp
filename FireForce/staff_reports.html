@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เรื่องร้องเรียน — เจ้าหน้าที่</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        .filter-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+        .filter-tabs::-webkit-scrollbar{display:none}
+        .filter-tab{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:var(--fs-xs);font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'Sarabun',sans-serif}
+        .filter-tab.on{background:var(--navy);color:white;border-color:var(--navy)}
+        .report-card{background:var(--bg-card);border-radius:var(--radius-md);padding:14px;margin-bottom:10px;border:0.5px solid var(--border);box-shadow:var(--shadow-sm);transition:border-color .2s}
+        .report-card:hover{border-color:var(--accent)}
+        .report-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+        .report-ic{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .report-title{font-size:var(--fs-base);font-weight:700;color:var(--text-primary);margin-bottom:3px}
+        .report-meta{font-size:var(--fs-xs);color:var(--text-muted);line-height:1.5}
+        .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700}
+        .pill-new{background:#E3F2FD;color:#1565C0}
+        .pill-prog{background:#FFF8E1;color:#F57F17}
+        .pill-done{background:#E8F5E9;color:#2E7D32}
+        .pill-cancel{background:#F5F5F5;color:#757575}
+        .report-actions{display:flex;gap:7px;flex-wrap:wrap;padding-top:10px;border-top:0.5px solid var(--divider)}
+        .btn-action{padding:7px 14px;border:none;border-radius:9px;font-size:var(--fs-xs);font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;transition:opacity .15s;display:inline-flex;align-items:center;gap:5px}
+        .btn-action:hover{opacity:.85}
+        .btn-accept{background:#E8F5E9;color:#2E7D32}
+        .btn-inprog{background:#FFF8E1;color:#F57F17}
+        .btn-done{background:var(--navy);color:white}
+        .btn-cancel{background:#FFEBEE;color:#C62828}
+        .btn-detail{background:var(--bg-card-2);color:var(--text-secondary);border:0.5px solid var(--border)}
+        .staff-bottom-nav{position:sticky;bottom:0;width:100%;background:var(--bg-card);display:flex;justify-content:space-around;padding:10px 0 14px;border-top:0.5px solid var(--border);z-index:50}
+        .snav-item{display:flex;flex-direction:column;align-items:center;color:var(--text-muted);font-size:var(--fs-xs);gap:4px;min-width:60px;font-weight:600;transition:color .2s;text-decoration:none}
+        .snav-item.active{color:var(--accent)}
+        .snav-item i{font-size:20px}
+        .empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+        .empty-state i{font-size:44px;margin-bottom:12px;display:block;color:var(--border)}
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="staff_dashboard.html" class="back-arrow" aria-label="กลับ Dashboard">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">เรื่องร้องเรียน</div>
+                    <div class="header-page-sub">จัดการและติดตาม</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                    <span class="toggle-knob"><i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i><i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i></span>
+                </button>
+                <button class="header-icon-btn" id="exportBtn" onclick="exportReports()" aria-label="Export CSV" style="display:none;">
+                    <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+        <div class="emg-strip" style="cursor:default;margin-top:2px;">
+            <div class="emg-strip-left"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>ทั้งหมด <span id="totalCount">0</span> เรื่อง</div>
+            <div style="font-size:var(--fs-sm);color:rgba(255,255,255,.8);font-weight:700;">เดือนนี้</div>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top:16px;">
+        <!-- Search -->
+        <div style="position:relative;margin-bottom:12px;">
+            <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--text-muted);z-index:1;"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="search" id="searchInput" class="custom-input" placeholder="ค้นหาชื่อ หรือ หมวดหมู่..." style="padding-left:44px;" aria-label="ค้นหาเรื่องร้องเรียน">
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="filter-tabs" role="tablist">
+            <button class="filter-tab on" onclick="filterReports('all',this)" role="tab">ทั้งหมด</button>
+            <button class="filter-tab" onclick="filterReports('new',this)" role="tab">ใหม่</button>
+            <button class="filter-tab" onclick="filterReports('inprogress',this)" role="tab">กำลังดำเนิน</button>
+            <button class="filter-tab" onclick="filterReports('done',this)" role="tab">เสร็จแล้ว</button>
+            <button class="filter-tab" onclick="filterReports('cancel',this)" role="tab">ยกเลิก</button>
+        </div>
+
+        <!-- Report list -->
+        <div id="reportList"></div>
+    </main>
+
+    <nav class="staff-bottom-nav" aria-label="เมนูเจ้าหน้าที่">
+        <a href="staff_dashboard.html" class="snav-item"><i class="fa-solid fa-house" aria-hidden="true"></i><span>หน้าหลัก</span></a>
+        <a href="staff_reports.html" class="snav-item active" aria-current="page"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span>ร้องเรียน</span></a>
+        <a href="staff_tanks.html" class="snav-item"><i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i><span>ถัง</span></a>
+    </nav>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+(function(){
+    var role=sessionStorage.getItem('userRole')||'staff';
+    if(role==='admin'){var eb=document.getElementById('exportBtn');if(eb)eb.style.display='inline-flex';}
+})();
+
+/* ===== Export CSV (ย้ายมาจาก staff_settings.html) ===== */
+function exportReports(){
+    showToast('กำลังดึงข้อมูล...', 'info');
+    fetch(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            if (!data.success || !data.reports || data.reports.length === 0) {
+                showToast('ไม่มีข้อมูลรายงาน', 'error'); return;
+            }
+            var headers = ['ReportID','วันที่','หมวดหมู่','ชื่อผู้แจ้ง','เบอร์โทร','พิกัด','รายละเอียด','สถานะ'];
+            var rows = data.reports.map(function(r){
+                return [
+                    r.ReportID   || '',
+                    r.Timestamp  || '',
+                    r.Category   || '',
+                    r.ReporterName  || '',
+                    r.ReporterPhone || '',
+                    r.Location   || '',
+                    (r.Details   || '').replace(/,/g,''),
+                    r.Status     || '',
+                ].map(function(v){ return '"' + v + '"'; }).join(',');
+            });
+            var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var url  = URL.createObjectURL(blob);
+            var a    = document.createElement('a');
+            a.href   = url;
+            a.download = 'รายงาน_' + new Date().toLocaleDateString('th-TH') + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Export สำเร็จ!', 'success');
+        })
+        .catch(function(){
+            showToast('ไม่สามารถ Export ได้ กรุณาลองใหม่', 'error');
+        });
+}
+
+var SCRIPT_URL='https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+var catConfig={
+    disaster:   {icon:'fa-fire',       bg:'#FFEBEE',color:'#C62828',label:'สาธารณภัย'},
+    other:      {icon:'fa-ellipsis',   bg:'#F5F5F5',color:'#555555',label:'อื่นๆ'},
+};
+var statusConfig={
+    new:        {label:'ใหม่',           cls:'pill-new'},
+    inprogress: {label:'กำลังดำเนินการ', cls:'pill-prog'},
+    done:       {label:'เสร็จแล้ว',      cls:'pill-done'},
+    cancel:     {label:'ยกเลิก',         cls:'pill-cancel'},
+    'รอดำเนินการ':{label:'รอดำเนินการ',  cls:'pill-new'},
+};
+
+var currentFilter='all';
+var allReports=[];
+
+/* =====================================================
+   โหลดข้อมูลจาก Google Sheets จริง
+   ===================================================== */
+function loadReports(){
+    document.getElementById('reportList').innerHTML=
+        '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><p>กำลังโหลดข้อมูล...</p></div>';
+
+    fetch(SCRIPT_URL+'?type=getReports&token='+encodeURIComponent(sessionStorage.getItem('staffToken')||''))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            if(data.success && data.reports){
+                allReports=data.reports.map(function(r){
+                    var catKey=(r.Category||'other').toLowerCase();
+                    var catLabel=(catConfig[catKey]||catConfig.other).label;
+                    return {
+                        id      : r.ReportID     || '—',
+                        category: catKey,
+                        title   : catLabel,
+                        reporter: r.ReporterName || '—',
+                        phone   : r.ReporterPhone|| '—',
+                        location: r.Location     || '—',
+                        details : r.Details      || '—',
+                        status  : normalizeStatus(r.Status||'new'),
+                        time    : formatTime(r.Timestamp),
+                    };
+                });
+            } else {
+                allReports=[];
+                document.getElementById('totalCount').textContent='0';
+                if (data.message && data.message.indexOf('เข้าสู่ระบบใหม่') > -1) {
+                    showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error');
+                    setTimeout(function(){ window.location.href = 'login.html'; }, 1500);
+                    return;
+                }
+                showErrorState('โหลดข้อมูลจาก Sheets ไม่สำเร็จ');
+                showToast('โหลดข้อมูลจาก Sheets ไม่สำเร็จ','error');
+                return;
+            }
+            renderReports(allReports);
+        })
+        .catch(function(){
+            allReports=[];
+            document.getElementById('totalCount').textContent='0';
+            showErrorState('ไม่สามารถเชื่อมต่อ Sheets ได้');
+            showToast('ไม่สามารถเชื่อมต่อ Sheets ได้','error');
+        });
+}
+
+function showErrorState(message){
+    document.getElementById('reportList').innerHTML=
+        '<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><p>'+message+'</p>'+
+        '<button class="btn-action btn-accept" style="margin-top:10px;" onclick="loadReports()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> ลองใหม่</button></div>';
+}
+
+function normalizeStatus(s){
+    if(!s) return 'new';
+    s=s.toString().toLowerCase().trim();
+    if(s==='new'||s==='ใหม่'||s==='รอดำเนินการ') return 'new';
+    if(s==='inprogress'||s==='กำลังดำเนินการ') return 'inprogress';
+    if(s==='done'||s==='เสร็จแล้ว'||s==='แก้ไขแล้ว') return 'done';
+    if(s==='cancel'||s==='ยกเลิก') return 'cancel';
+    return 'new';
+}
+
+function formatTime(ts){
+    if(!ts) return '—';
+    var d=new Date(ts);
+    if(isNaN(d)) return ts.toString();
+    var diff=Math.floor((Date.now()-d)/1000);
+    if(diff<3600)  return Math.floor(diff/60)+'  นาทีที่แล้ว';
+    if(diff<86400) return Math.floor(diff/3600)+' ชั่วโมงที่แล้ว';
+    return Math.floor(diff/86400)+' วันที่แล้ว';
+}
+
+/* =====================================================
+   Render
+   ===================================================== */
+function renderReports(list){
+    var container=document.getElementById('reportList');
+    document.getElementById('totalCount').textContent=allReports.length;
+    if(!list.length){
+        container.innerHTML='<div class="empty-state"><i class="fa-solid fa-inbox" aria-hidden="true"></i><p>ไม่พบเรื่องร้องเรียน</p></div>';
+        return;
+    }
+    container.innerHTML=list.map(function(r){
+        var cat=catConfig[r.category]||catConfig.other;
+        var st=statusConfig[r.status]||statusConfig.new;
+        var actions='';
+        if(r.status==='new'){
+            actions='<button class="btn-action btn-accept" onclick="updateStatus(\''+r.id+'\',\'inprogress\')"><i class="fa-solid fa-check" aria-hidden="true"></i> รับเรื่อง</button>'+
+                    '<button class="btn-action btn-cancel" onclick="updateStatus(\''+r.id+'\',\'cancel\')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> ยกเลิก</button>';
+        } else if(r.status==='inprogress'){
+            actions='<button class="btn-action btn-done" onclick="updateStatus(\''+r.id+'\',\'done\')"><i class="fa-solid fa-check-double" aria-hidden="true"></i> แก้ไขเสร็จแล้ว</button>'+
+                    '<button class="btn-action btn-cancel" onclick="updateStatus(\''+r.id+'\',\'cancel\')"><i class="fa-solid fa-xmark" aria-hidden="true"></i> ไม่สามารถแก้ไขได้</button>';
+        }
+        return '<div class="report-card" id="card-'+r.id+'">'+
+            '<div class="report-card-top">'+
+            '<div class="report-ic" style="background:'+cat.bg+'"><i class="fa-solid '+cat.icon+'" style="color:'+cat.color+';font-size:18px;" aria-hidden="true"></i></div>'+
+            '<div style="flex:1;">'+
+            '<div class="report-title">'+r.title+'</div>'+
+            '<div class="report-meta">'+escapeHtml(r.reporter)+' • '+escapeHtml(r.phone)+'<br>'+escapeHtml(r.location)+' • '+r.time+'</div>'+
+            '<span class="pill '+st.cls+'" style="margin-top:5px;">'+st.label+'</span>'+
+            '</div></div>'+
+            '<div style="font-size:var(--fs-sm);color:var(--text-secondary);margin-bottom:10px;padding:0 2px;">'+escapeHtml(r.details)+'</div>'+
+            (actions?'<div class="report-actions">'+actions+'</div>':'')+
+        '</div>';
+    }).join('');
+}
+
+/* =====================================================
+   Filter + Search
+   ===================================================== */
+function filterReports(status,btn){
+    currentFilter=status;
+    document.querySelectorAll('.filter-tab').forEach(function(b){b.classList.remove('on');});
+    btn.classList.add('on');
+    var filtered=status==='all'?allReports:allReports.filter(function(r){return r.status===status;});
+    renderReports(filtered);
+}
+
+document.getElementById('searchInput').addEventListener('input',function(){
+    var q=this.value.toLowerCase().trim();
+    var filtered=allReports.filter(function(r){
+        return (r.title+r.reporter+r.location+r.details).toLowerCase().indexOf(q)>-1;
+    });
+    if(currentFilter!=='all') filtered=filtered.filter(function(r){return r.status===currentFilter;});
+    renderReports(filtered);
+});
+
+/* =====================================================
+   Update สถานะ → Google Sheets จริง
+   แนบ token ไปด้วยทุกครั้ง เพราะ backend เช็คสิทธิ์แล้วก่อนแก้ข้อมูล
+   ===================================================== */
+function updateStatus(id,newStatus){
+    var r=allReports.find(function(x){return x.id===id;});
+    if(!r) return;
+
+    var msgs={inprogress:'รับเรื่องแล้ว กำลังดำเนินการ',done:'แก้ไขเสร็จสิ้น',cancel:'ยกเลิกเรื่องแล้ว'};
+    showToast(msgs[newStatus]||'กำลังอัปเดต...','info');
+
+    fetch(SCRIPT_URL,{
+        method:'POST',
+        body:JSON.stringify({
+            type      :'updateReport',
+            reportId  :id,
+            status    :newStatus,
+            token     :sessionStorage.getItem('staffToken') || '',
+        }),
+    })
+    .then(function(res){return res.json();})
+    .then(function(data){
+        if(data.success){
+            r.status=newStatus;
+            showToast(msgs[newStatus]||'อัปเดตแล้ว','success');
+        } else if (data.message && data.message.indexOf('เข้าสู่ระบบใหม่') > -1) {
+            /* token หมดอายุหรือไม่ถูกต้อง — ต้อง login ใหม่ ไม่ใช่แค่แจ้งเตือนเฉยๆ */
+            showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error');
+            setTimeout(function(){ window.location.href = 'login.html'; }, 1500);
+        } else {
+            showToast('อัปเดตใน UI แล้ว (Sheets: '+( data.message||'error')+')','error');
+            r.status=newStatus;
+        }
+        var filtered=currentFilter==='all'?allReports:allReports.filter(function(r){return r.status===currentFilter;});
+        renderReports(filtered);
+    })
+    .catch(function(){
+        r.status=newStatus;
+        showToast(msgs[newStatus]||'อัปเดตแล้ว (offline)','success');
+        var filtered=currentFilter==='all'?allReports:allReports.filter(function(r){return r.status===currentFilter;});
+        renderReports(filtered);
+    });
+}
+
+/* โหลดตอนเปิดหน้า */
+loadReports();
+</script>
+</body>
+</html>

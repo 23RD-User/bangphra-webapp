@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่าระบบ — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        .setting-group{margin-bottom:20px}
+        .setting-group-title{font-size:var(--fs-sm);font-weight:700;color:var(--text-muted);margin-bottom:8px;padding-left:2px;text-transform:uppercase;letter-spacing:.5px}
+        .setting-item{background:var(--bg-card);border-radius:var(--radius-md);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;border:0.5px solid var(--border);box-shadow:var(--shadow-sm);transition:border-color .2s;cursor:pointer}
+        .setting-item:hover{border-color:var(--accent)}
+        .setting-item-left{display:flex;align-items:center;gap:13px}
+        .setting-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .setting-icon i{font-size:18px}
+        .setting-title{font-size:var(--fs-base);font-weight:700;color:var(--text-primary)}
+        .setting-sub{font-size:var(--fs-xs);color:var(--text-muted);margin-top:2px}
+        .setting-item.disabled{opacity:.45;cursor:not-allowed}
+        .setting-item.disabled:hover{border-color:var(--border)}
+        .lock-badge{display:inline-flex;align-items:center;gap:4px;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+        .admin-only-banner{background:linear-gradient(135deg,#1C2B4A,#0F1A2E);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+        .staff-bottom-nav{position:sticky;bottom:0;width:100%;background:var(--bg-card);display:flex;justify-content:space-around;padding:10px 0 14px;border-top:0.5px solid var(--border);z-index:50}
+        .snav-item{display:flex;flex-direction:column;align-items:center;color:var(--text-muted);font-size:var(--fs-xs);gap:4px;min-width:60px;font-weight:600;transition:color .2s;text-decoration:none}
+        .snav-item.active{color:var(--accent)}
+        .snav-item i{font-size:20px}
+        #accessDenied{display:none;text-align:center;padding:60px 20px}
+        #accessDenied i{font-size:54px;color:var(--border);display:block;margin-bottom:16px}
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="staff_dashboard.html" class="back-arrow" aria-label="กลับ Dashboard">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">ตั้งค่าระบบ</div>
+                    <div class="header-page-sub" id="roleSubtitle">Admin เท่านั้น</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob"><span class="toggle-icon-sun"><i class="fa-solid fa-sun" aria-hidden="true"></i></span><span class="toggle-icon-moon"><i class="fa-solid fa-moon" aria-hidden="true"></i></span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Access denied สำหรับ Staff -->
+    <div id="accessDenied">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        <h2 style="font-size:var(--fs-md);font-weight:700;color:var(--text-primary);margin-bottom:8px;">ไม่มีสิทธิ์เข้าถึง</h2>
+        <p style="font-size:var(--fs-sm);color:var(--text-muted);">หน้านี้สำหรับ Admin เท่านั้น<br>กรุณาติดต่อผู้ดูแลระบบ</p>
+        <a href="staff_dashboard.html" class="btn-primary" style="display:inline-flex;margin-top:20px;width:auto;padding:12px 24px;text-decoration:none;">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> กลับหน้าหลัก
+        </a>
+    </div>
+
+    <!-- เนื้อหาสำหรับ Admin -->
+    <main class="main-content" id="adminContent" style="padding-top:18px;">
+        <div class="admin-only-banner">
+            <div style="width:38px;height:38px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fa-solid fa-shield-halved" style="color:white;font-size:18px;" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div style="font-size:var(--fs-base);font-weight:700;color:white;">Admin Dashboard</div>
+                <div style="font-size:var(--fs-xs);color:rgba(255,255,255,.55);">คุณมีสิทธิ์เต็มในการจัดการระบบ</div>
+            </div>
+        </div>
+
+        <!-- จัดการผู้ใช้ -->
+        <div class="setting-group">
+            <div class="setting-group-title">จัดการผู้ใช้งาน</div>
+            <div class="setting-item" onclick="showToast('ฟีเจอร์นี้กำลังพัฒนา','info')">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#E3F2FD;"><i class="fa-solid fa-user-plus" style="color:#1565C0;" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">เพิ่มเจ้าหน้าที่</div><div class="setting-sub">สร้างบัญชีผู้ใช้ใหม่</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+            <div class="setting-item" onclick="showToast('ฟีเจอร์นี้กำลังพัฒนา','info')">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#FFF0EB;"><i class="fa-solid fa-users-gear" style="color:var(--accent);" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">จัดการสิทธิ์</div><div class="setting-sub">กำหนด Admin / Staff</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+            <div class="setting-item" onclick="loadStaffList()">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#E8F5E9;"><i class="fa-solid fa-users" style="color:#2E7D32;" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">รายชื่อเจ้าหน้าที่</div><div class="setting-sub">ดูรายชื่อทั้งหมดในระบบ</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <!-- ข้อมูลและรายงาน -->
+        <div class="setting-group">
+            <div class="setting-group-title">ข้อมูลและรายงาน</div>
+            <div class="setting-item" onclick="exportReports()">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#E8F5E9;"><i class="fa-solid fa-file-export" style="color:#2E7D32;" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">Export รายงาน</div><div class="setting-sub">ดาวน์โหลดข้อมูลเป็น CSV</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+            <div class="setting-item" onclick="showToast('ฟีเจอร์นี้กำลังพัฒนา','info')">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#E3F2FD;"><i class="fa-solid fa-chart-pie" style="color:#1565C0;" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">รายงานสรุปประจำเดือน</div><div class="setting-sub">ดูสถิติย้อนหลัง</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+        </div>
+
+        <!-- การแจ้งเตือน -->
+        <div class="setting-group">
+            <div class="setting-group-title">การแจ้งเตือน</div>
+            <div class="setting-item" onclick="showToast('ฟีเจอร์นี้กำลังพัฒนา','info')">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#E8F5E9;"><i class="fa-brands fa-line" style="color:#00C300;" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">LINE Notify</div><div class="setting-sub">ตั้งค่าการแจ้งเตือนเจ้าหน้าที่</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+            <div class="setting-item" onclick="showToast('ฟีเจอร์นี้กำลังพัฒนา','info')">
+                <div class="setting-item-left">
+                    <div class="setting-icon" style="background:#FFF0EB;"><i class="fa-solid fa-bell" style="color:var(--accent);" aria-hidden="true"></i></div>
+                    <div><div class="setting-title">การแจ้งเตือนระบบ</div><div class="setting-sub">กำหนดเงื่อนไขแจ้งเตือน</div></div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </div>
+        </div>
+
+
+    </main>
+
+    <nav class="staff-bottom-nav" aria-label="เมนูเจ้าหน้าที่">
+        <a href="staff_dashboard.html" class="snav-item"><i class="fa-solid fa-house" aria-hidden="true"></i><span>หน้าหลัก</span></a>
+        <a href="staff_reports.html" class="snav-item"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span>ร้องเรียน</span></a>
+        <a href="staff_tanks.html" class="snav-item"><i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i><span>ถัง</span></a>
+        <a href="staff_settings.html" class="snav-item active" aria-current="page"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>ตั้งค่า</span></a>
+    </nav>
+</div>
+<!-- Modal รายชื่อเจ้าหน้าที่ -->
+<div id="staffModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);align-items:flex-end;">
+    <div style="background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-height:75vh;overflow-y:auto;padding:20px 16px 32px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:var(--fs-md);font-weight:700;color:var(--text-primary);">รายชื่อเจ้าหน้าที่</div>
+            <button onclick="closeStaffModal()" style="background:var(--bg-base);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--text-muted);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="staffListContent">
+            <div style="text-align:center;padding:24px;color:var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i>
+                <p style="margin-top:8px;">กำลังโหลด...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+(function checkAccess(){
+    var role = sessionStorage.getItem('userRole') || 'staff';
+    if (role !== 'admin') {
+        document.getElementById('adminContent').style.display = 'none';
+        document.getElementById('accessDenied').style.display = 'block';
+        document.getElementById('roleSubtitle').textContent = 'ไม่มีสิทธิ์เข้าถึง';
+    }
+})();
+
+
+
+/* ===== รายชื่อเจ้าหน้าที่ ===== */
+function loadStaffList() {
+    document.getElementById('staffModal').style.display = 'flex';
+    fetch(SCRIPT_URL + '?type=getStaff&token=' + sessionStorage.getItem('staffToken'))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            if (!data.success || !data.staff || data.staff.length === 0) {
+                document.getElementById('staffListContent').innerHTML =
+                    '<p style="text-align:center;color:var(--text-muted);padding:24px;">ไม่พบข้อมูลเจ้าหน้าที่</p>';
+                return;
+            }
+            var roleMap = {
+                admin   : { label:'Admin',   bg:'#FFF0EB', color:'#E8491E' },
+                manager : { label:'Manager', bg:'#E3F2FD', color:'#1565C0' },
+                staff   : { label:'Staff',   bg:'#E8F5E9', color:'#2E7D32' },
+            };
+            var html = '';
+            data.staff.forEach(function(s) {
+                var role    = (s.Role||'staff').toLowerCase();
+                var roleObj = roleMap[role] || roleMap.staff;
+                var isActive = (s.Status||'Active') === 'Active';
+                html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--divider);">' +
+                    '<div style="width:40px;height:40px;border-radius:50%;background:var(--bg-base);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+                    '<i class="fa-solid fa-user" style="color:var(--text-muted);"></i></div>' +
+                    '<div style="flex:1;min-width:0;">' +
+                    '<div style="display:flex;align-items:center;gap:6px;">' +
+                    '<span style="font-size:var(--fs-base);font-weight:700;color:var(--text-primary);">' + s.Name + '</span>' +
+                    (!isActive ? '<span style="font-size:10px;color:#999;background:#F5F5F5;padding:2px 6px;border-radius:4px;">Inactive</span>' : '') +
+                    '</div>' +
+                    '<div style="font-size:var(--fs-xs);color:var(--text-muted);margin-top:2px;">' + s.Phone + '</div>' +
+                    '<div style="font-size:var(--fs-xs);color:var(--text-muted);">' + s.Email + '</div>' +
+                    '</div>' +
+                    '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:' + roleObj.bg + ';color:' + roleObj.color + ';flex-shrink:0;">' + roleObj.label + '</span>' +
+                    '</div>';
+            });
+            document.getElementById('staffListContent').innerHTML = html;
+        })
+        .catch(function(){
+            document.getElementById('staffListContent').innerHTML =
+                '<p style="text-align:center;color:var(--text-muted);padding:24px;">ไม่สามารถโหลดข้อมูลได้</p>';
+        });
+}
+
+function closeStaffModal() {
+    document.getElementById('staffModal').style.display = 'none';
+}
+
+/* ===== Export CSV ===== */
+function exportReports() {
+    showToast('กำลังดึงข้อมูล...', 'info');
+    fetch(SCRIPT_URL + '?type=getReports&token=' + sessionStorage.getItem('staffToken'))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            if (!data.success || !data.reports || data.reports.length === 0) {
+                showToast('ไม่มีข้อมูลรายงาน', 'error'); return;
+            }
+            var headers = ['ReportID','วันที่','หมวดหมู่','ชื่อผู้แจ้ง','เบอร์โทร','พิกัด','รายละเอียด','สถานะ'];
+            var rows = data.reports.map(function(r){
+                return [
+                    r.ReportID   || '',
+                    r.Timestamp  || '',
+                    r.Category   || '',
+                    r.ReporterName  || '',
+                    r.ReporterPhone || '',
+                    r.Location   || '',
+                    (r.Details   || '').replace(/,/g,''),
+                    r.Status     || '',
+                ].map(function(v){ return '"' + v + '"'; }).join(',');
+            });
+            var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var url  = URL.createObjectURL(blob);
+            var a    = document.createElement('a');
+            a.href   = url;
+            a.download = 'รายงาน_' + new Date().toLocaleDateString('th-TH') + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Export สำเร็จ!', 'success');
+        })
+        .catch(function(){
+            showToast('ไม่สามารถ Export ได้ กรุณาลองใหม่', 'error');
+        });
+}
+</script>
+</body>
+</html>

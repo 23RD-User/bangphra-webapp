@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จุดติดตั้งถังดับเพลิง - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <style>
+        .view-toggle-box {
+            display:flex; background:var(--bg-card);
+            border-radius:12px; padding:5px;
+            margin-bottom:16px; border:0.5px solid var(--border);
+        }
+        .toggle-tab-btn {
+            flex:1; padding:10px; border:none; border-radius:9px;
+            background:transparent; color:var(--text-muted);
+            font-size:15px; font-weight:700; cursor:pointer;
+            transition:all 0.2s; font-family:'Sarabun',sans-serif;
+        }
+        .toggle-tab-btn.active {
+            background:var(--navy); color:white;
+            box-shadow:0 2px 8px rgba(28,43,74,0.25);
+        }
+        #map {
+            width:100%; height:60vh; border-radius:var(--radius-md);
+            box-shadow:var(--shadow-md); z-index:1;
+        }
+        .leaflet-popup-content-wrapper { font-family:'Sarabun',sans-serif; border-radius:12px; }
+        .leaflet-popup-content h3 { font-size:16px; margin:0 0 5px; font-weight:bold; }
+        .leaflet-popup-content p  { font-size:14px; margin:2px 0; }
+        .skel-card {
+            background:var(--bg-card); border-radius:var(--radius-md);
+            padding:14px 16px; margin-bottom:10px;
+            display:flex; gap:12px; align-items:center;
+            border:0.5px solid var(--border);
+        }
+        .skel-circle-sm {
+            width:44px; height:44px; border-radius:10px;
+            background:var(--bg-skel); flex-shrink:0;
+        }
+        .skel-lines { flex:1; display:flex; flex-direction:column; gap:8px; }
+        .skel-line  { height:12px; border-radius:6px; background:var(--bg-skel); }
+        .skel-line.short { width:55%; }
+        .error-state { text-align:center; padding:40px 20px; color:var(--text-muted); }
+        .error-state i { font-size:44px; color:#e53935; margin-bottom:12px; display:block; }
+        .error-state p { font-size:15px; margin-bottom:16px; }
+        .btn-retry {
+            background:var(--accent); color:white; border:none;
+            border-radius:10px; padding:10px 24px;
+            font-size:15px; font-weight:700;
+            font-family:'Sarabun',sans-serif; cursor:pointer;
+        }
+        .btn-inspect {
+            margin-top:8px; padding:6px 14px;
+            background:var(--accent); color:white; border:none;
+            border-radius:8px; font-size:13px; font-weight:700;
+            font-family:'Sarabun',sans-serif; cursor:pointer;
+            display:inline-flex; align-items:center; gap:5px;
+            transition:opacity 0.15s;
+        }
+        .btn-inspect:hover { opacity:0.85; }
+        .btn-map-focus {
+            margin-top:8px; margin-left:6px;
+            padding:6px 12px; background:transparent;
+            color:var(--navy); border:1.5px solid var(--navy);
+            border-radius:8px; font-size:13px; font-weight:700;
+            font-family:'Sarabun',sans-serif; cursor:pointer;
+            display:inline-flex; align-items:center; gap:5px;
+            transition:all 0.15s;
+        }
+        .btn-map-focus:hover { background:var(--navy); color:white; }
+        .status-lost { background:#424242; color:#fff; }
+    </style>
+</head>
+<body>
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="index.html" class="back-arrow" aria-label="กลับหน้าหลัก">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">จุดติดตั้งถังดับเพลิง</div>
+                    <div class="header-page-sub">เทศบาลตำบลบางพระ</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob">
+                    <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <div class="view-toggle-box" role="tablist" aria-label="เลือกรูปแบบการแสดงผล">
+            <button class="toggle-tab-btn active" id="btnList"
+                    onclick="switchView('list')"
+                    role="tab" aria-selected="true" aria-controls="listView">
+                <i class="fa-solid fa-list" aria-hidden="true"></i> แบบรายการ
+            </button>
+            <button class="toggle-tab-btn" id="btnMap"
+                    onclick="switchView('map')"
+                    role="tab" aria-selected="false" aria-controls="mapView">
+                <i class="fa-solid fa-map" aria-hidden="true"></i> แบบแผนที่
+            </button>
+        </div>
+
+        <!-- List View -->
+        <div id="listView" role="tabpanel">
+            <div style="margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <span style="font-size:var(--fs-sm);font-weight:700;color:var(--text-primary);">รายการทั้งหมด</span>
+                    <span class="count-chip" id="countChip">กำลังโหลด...</span>
+                </div>
+                <div class="input-group" style="position:relative;margin-bottom:0;">
+                    <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--text-muted);z-index:1;" aria-hidden="true">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="search" id="searchInput" class="custom-input"
+                           placeholder="ค้นหาชื่อชุมชน หรือ สถานที่..."
+                           style="padding-left:44px;"
+                           aria-label="ค้นหาถังดับเพลิง">
+                </div>
+            </div>
+
+            <div id="extinguisherList" class="accordion-container">
+                <div id="loadingState">
+                    <div class="skel-card"><div class="skel-circle-sm"></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+                    <div class="skel-card"><div class="skel-circle-sm"></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+                    <div class="skel-card"><div class="skel-circle-sm"></div><div class="skel-lines"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map View -->
+        <div id="mapView" style="display:none;" role="tabpanel">
+            <div id="map"></div>
+            <p style="text-align:center;font-size:var(--fs-sm);color:var(--text-muted);margin-top:12px;">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                แตะที่หมุดเพื่อดูข้อมูลถังดับเพลิง
+            </p>
+        </div>
+
+    </main>
+
+    <!-- FAB QR Scan -->
+    <button class="fab-scan-btn" onclick="startQRScan()" aria-label="สแกน QR Code ถังดับเพลิง">
+        <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+        <span>สแกน QR</span>
+    </button>
+
+    <!-- QR Scanner overlay -->
+    <div id="qrScannerOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:#000;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(0,0,0,0.6);flex-shrink:0;">
+            <span style="color:white;font-weight:700;font-size:15px;">
+                <i class="fa-solid fa-qrcode" aria-hidden="true" style="margin-right:6px;"></i>
+                สแกน QR ถังดับเพลิง
+            </span>
+            <button onclick="closeQRScanner()" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;color:white;font-size:16px;cursor:pointer;flex-shrink:0;" aria-label="ปิดกล้อง">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div id="qrReader" style="flex:1;"></div>
+        <p style="text-align:center;color:rgba(255,255,255,0.8);font-size:13px;padding:14px;flex-shrink:0;">
+            <i class="fa-solid fa-camera" aria-hidden="true"></i>
+            ส่อง QR code บนถังดับเพลิงให้อยู่ในกรอบ
+        </p>
+    </div>
+
+    <nav class="bottom-nav" aria-label="เมนูหลัก">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-house"></i></span>
+            <span class="nav-text">หน้าหลัก</span>
+        </a>
+        <a href="report.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span class="nav-text">ร้องเรียน</span>
+        </a>
+        <a href="track.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="nav-text">ติดตาม</span>
+        </a>
+        <a href="login.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="nav-text">โปรไฟล์</span>
+        </a>
+    </nav>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+var API_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+var fireDataList = []; var markers = {}; var map = null; var isMapInitialized = false;
+
+var communityColors = {
+    "ชุมชนคอเขาพัฒนา":"#e53935","ชุมชนวัดหลวง":"#1e88e5",
+    "ชุมชนตลาดบน":"#43a047","ชุมชนพร้อมใจ":"#fb8c00",
+    "ชุมชนท่าตาลักษณ์":"#8e24aa","ชุมชนบางพระน่าอยู่":"#00acc1",
+    "ชุมชนบ้านนาพุ":"#d81b60","ชุมชนทิวสนพัฒนา":"#3949ab",
+    "ชุมชนท้ายบ้าน":"#8d6e63"
+};
+
+var communityZones = [
+    { name:"ชุมชนท่าตาลักษณ์", color:communityColors["ชุมชนท่าตาลักษณ์"],
+      coords:[[13.210066,100.941186],[13.20921,100.9414],[13.208708,100.941787],[13.208332,100.942302],[13.208249,100.943031],[13.208562,100.943804],[13.20901,100.944063],[13.210129,100.943975],[13.211278,100.941315],[13.211833,100.94],[13.210651,100.939362],[13.210547,100.940456],[13.21038,100.940928],[13.210066,100.941186]] },
+    { name:"ชุมชนวัดหลวง", color:communityColors["ชุมชนวัดหลวง"],
+      coords:[[13.208811,100.935051],[13.210075,100.937433],[13.20996,100.939064],[13.210221,100.939772],[13.211819,100.93975],[13.211652,100.937562],[13.212028,100.936425],[13.212268,100.935395],[13.212582,100.934815],[13.212425,100.93444],[13.211746,100.934386],[13.211057,100.934418],[13.210127,100.934622],[13.208811,100.935051]] },
+    { name:"ชุมชนคอเขาพัฒนา", color:communityColors["ชุมชนคอเขาพัฒนา"],
+      coords:[[13.210082,100.946404],[13.20394,100.942627],[13.1983,100.95872],[13.201809,100.960137],[13.204776,100.962197],[13.207074,100.962583],[13.208411,100.960952],[13.207909,100.956446],[13.206238,100.954729],[13.206907,100.948549],[13.210082,100.946404]] },
+    { name:"ชุมชนท้ายบ้าน", color:communityColors["ชุมชนท้ายบ้าน"],
+      coords:[[13.206239,100.937412],[13.206291,100.937809],[13.206834,100.937664],[13.207633,100.938002],[13.208939,100.937632],[13.209414,100.937702],[13.210025,100.937605],[13.209111,100.935953],[13.208683,100.935095],[13.207983,100.935309],[13.207001,100.93584],[13.206547,100.936323],[13.206286,100.936859],[13.206239,100.937412]] },
+    { name:"ชุมชนทิวสนพัฒนา", color:communityColors["ชุมชนทิวสนพัฒนา"],
+      coords:[[13.212909,100.948317],[13.211509,100.948692],[13.212867,100.954443],[13.214403,100.95676],[13.21645,100.961974],[13.221007,100.962759],[13.222678,100.963049],[13.223795,100.959154],[13.223482,100.95585],[13.222333,100.953167],[13.21943,100.952395],[13.212909,100.948317]] },
+    { name:"ชุมชนบ้านนาพุ", color:communityColors["ชุมชนบ้านนาพุ"],
+      coords:[[13.213232,100.946578],[13.212877,100.947972],[13.219472,100.952],[13.222152,100.9528],[13.223238,100.952843],[13.222883,100.949904],[13.222736,100.948273],[13.220501,100.94765],[13.219749,100.947715],[13.219373,100.94808],[13.218245,100.947844],[13.218433,100.946663],[13.218036,100.946213],[13.216365,100.945655],[13.215822,100.944797],[13.214694,100.94396],[13.214047,100.943337],[13.213942,100.944432],[13.213232,100.946578]] },
+    { name:"ชุมชนตลาดบน", color:communityColors["ชุมชนตลาดบน"],
+      coords:[[13.222121,100.942067],[13.220513,100.940737],[13.210549,100.944363],[13.211739,100.945157],[13.21458,100.943805],[13.215667,100.944299],[13.216356,100.9455],[13.217902,100.945994],[13.222121,100.942067]] },
+    { name:"ชุมชนบางพระน่าอยู่", color:communityColors["ชุมชนบางพระน่าอยู่"],
+      coords:[[13.211675,100.940714],[13.210442,100.943975],[13.219768,100.940503],[13.218652,100.939362],[13.211716,100.940563],[13.211675,100.940714]] },
+    { name:"ชุมชนพร้อมใจ", color:communityColors["ชุมชนพร้อมใจ"],
+      coords:[[13.21705,100.938938],[13.217175,100.937607],[13.21705,100.936942],[13.213749,100.936942],[13.212141,100.936942],[13.21258,100.940998],[13.213162,100.941336],[13.217056,100.939194],[13.21705,100.938938]] }
+];
+
+window.onload = function() { fetchDataFromSheets(); };
+
+async function fetchDataFromSheets() {
+    try {
+        var response = await fetch(API_URL);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        var data = await response.json();
+        fireDataList = data.filter(function(item){ return item.ID && item.Community; });
+        document.getElementById('countChip').innerText = fireDataList.length + ' จุด';
+        renderList(fireDataList);
+        initMap();
+    } catch(error) {
+        console.error('Fetch error:', error);
+        showErrorState();
+    }
+}
+
+function showErrorState() {
+    document.getElementById('countChip').innerText = 'โหลดไม่สำเร็จ';
+    document.getElementById('extinguisherList').innerHTML =
+        '<div class="error-state">' +
+        '<i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>' +
+        '<p>ไม่สามารถโหลดข้อมูลได้<br>กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่</p>' +
+        '<button class="btn-retry" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> ลองใหม่อีกครั้ง</button>' +
+        '</div>';
+}
+
+function renderList(data) {
+    var listContainer = document.getElementById('extinguisherList');
+    var grouped = {};
+    data.forEach(function(item){
+        if (!grouped[item.Community]) grouped[item.Community] = [];
+        grouped[item.Community].push(item);
+    });
+    var html = '';
+    Object.keys(grouped).forEach(function(community){
+        var items = grouped[community];
+        var color = communityColors[community] || '#E8491E';
+        html += '<div class="accordion-item" style="border-left:4px solid ' + color + ';">' +
+                '<button class="accordion-header" aria-expanded="false">' +
+                '<span style="color:' + color + ';font-weight:800;">' + community + ' (' + items.length + ' จุด)</span>' +
+                '<i class="fa-solid fa-chevron-down icon-arrow" aria-hidden="true"></i>' +
+                '</button>' +
+                '<div class="accordion-content">';
+        items.forEach(function(item){
+            var statusClass, statusIcon;
+            if (item.Status === 'พร้อมใช้งาน')      { statusClass='status-ok';    statusIcon='fa-circle-check'; }
+            else if (item.Status === 'ชำรุด')         { statusClass='status-danger'; statusIcon='fa-xmark'; }
+            else if (item.Status === 'สูญหาย')        { statusClass='status-lost';   statusIcon='fa-ghost'; }
+            else                                        { statusClass='status-warn';   statusIcon='fa-triangle-exclamation'; }
+            var inspectUrl = 'report_tank_issue.html?id=' + encodeURIComponent(item.ID) + '&name=' + encodeURIComponent(item.Location_Name || item.Community);
+            var hasPhoto = item.ImageUrl && item.ImageUrl.indexOf('อัปโหลดรูปล้มเหลว') === -1;
+            var thumb = hasPhoto
+                ? '<img src="' + item.ImageUrl + '" alt="ภาพถังดับเพลิง" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">'
+                : '<i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i>';
+            var thumbClickAttr = hasPhoto ? ' onclick="openImageLightbox(\'' + item.ImageUrl + '\')" style="color:' + color + ';overflow:hidden;cursor:zoom-in;"' : ' style="color:' + color + ';overflow:hidden;"';
+            html += '<div class="extinguisher-card">' +
+                    '<div class="item-image"' + thumbClickAttr + ' aria-hidden="true">' + thumb + '</div>' +
+                    '<div class="item-details">' +
+                    '<h3 style="color:var(--text-primary);">' + (item.Location_Name || 'ไม่ระบุ') + '</h3>' +
+                    '<p>รหัส: ' + item.ID + '</p>' +
+                    '<span class="status-badge ' + statusClass + '"><i class="fa-solid ' + statusIcon + '" aria-hidden="true"></i> ' + (item.Status || 'ไม่ระบุ') + '</span>' +
+                    '<div style="margin-top:4px;">' +
+                    '<button class="btn-inspect" onclick="window.location.href=\'' + inspectUrl + '\'" aria-label="แจ้งปัญหาถัง ' + item.ID + '"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> แจ้งปัญหา</button>' +
+                    '<button class="btn-map-focus" onclick="focusOnMarker(\'' + item.ID + '\',' + item.Latitude + ',' + item.Longitude + ')" aria-label="ดูบนแผนที่"><i class="fa-solid fa-map-pin" aria-hidden="true"></i> แผนที่</button>' +
+                    '</div></div></div>';
+        });
+        html += '</div></div>';
+    });
+    listContainer.innerHTML = html;
+    var headers = listContainer.querySelectorAll('.accordion-header');
+    headers.forEach(function(header){
+        header.addEventListener('click', function(){
+            var isOpen = this.classList.toggle('active');
+            this.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            var content = this.nextElementSibling;
+            content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + 40 + 'px';
+        });
+    });
+}
+
+function focusOnMarker(id, lat, lng) {
+    switchView('map');
+    setTimeout(function(){
+        if (map) { map.setView([lat, lng], 18, {animate:true, duration:1}); if (markers[id]) markers[id].openPopup(); }
+    }, 300);
+}
+
+function initMap() {
+    if (isMapInitialized) return;
+    map = L.map('map').setView([13.2100, 100.9411], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(map);
+    communityZones.forEach(function(zone){
+        L.polygon(zone.coords, { color:zone.color, fillColor:zone.color, fillOpacity:0.15, weight:2, dashArray:'5,5' })
+         .addTo(map).bindPopup('<div style="text-align:center;font-family:Sarabun,sans-serif;"><b>เขต' + zone.name + '</b></div>');
+    });
+    fireDataList.forEach(function(item){
+        if (!item.Latitude || !item.Longitude) return;
+        var color = communityColors[item.Community] || '#E8491E';
+        var statusColor = item.Status === 'พร้อมใช้งาน' ? '#2e7d32' : item.Status === 'ชำรุด' ? '#c62828' : item.Status === 'สูญหาย' ? '#424242' : '#f57f17';
+        var fireIcon = L.divIcon({
+            html:'<div style="background:' + color + ';color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,.3);font-size:12px;"><i class="fa-solid fa-fire-extinguisher"></i></div>',
+            className:'custom-div-icon', iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-14]
+        });
+        var mapsUrl = 'https://maps.google.com/?q=' + item.Latitude + ',' + item.Longitude;
+        var marker = L.marker([item.Latitude, item.Longitude], {icon:fireIcon}).addTo(map);
+        marker.bindPopup(
+            '<h3 style="color:' + color + ';font-weight:bold;margin-bottom:4px;">' + (item.Location_Name || 'จุดติดตั้ง') + '</h3>' +
+            '<p><strong>ชุมชน:</strong> ' + item.Community + '</p>' +
+            '<p><strong>รหัส:</strong> ' + item.ID + '</p>' +
+            '<p><strong>สถานะ:</strong> <span style="color:' + statusColor + ';font-weight:bold;">' + (item.Status || 'ไม่ระบุ') + '</span></p>' +
+            '<a href="' + mapsUrl + '" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:6px 12px;background:' + color + ';color:white;text-decoration:none;border-radius:6px;font-size:13px;font-family:Sarabun,sans-serif;">นำทาง GPS</a>'
+        );
+        markers[item.ID] = marker;
+    });
+    isMapInitialized = true;
+}
+
+function switchView(viewType) {
+    var listView = document.getElementById('listView');
+    var mapView  = document.getElementById('mapView');
+    var btnList  = document.getElementById('btnList');
+    var btnMap   = document.getElementById('btnMap');
+    if (viewType === 'list') {
+        listView.style.display='block'; mapView.style.display='none';
+        btnList.classList.add('active');    btnList.setAttribute('aria-selected','true');
+        btnMap.classList.remove('active');  btnMap.setAttribute('aria-selected','false');
+    } else {
+        listView.style.display='none'; mapView.style.display='block';
+        btnMap.classList.add('active');     btnMap.setAttribute('aria-selected','true');
+        btnList.classList.remove('active'); btnList.setAttribute('aria-selected','false');
+        if (map) setTimeout(function(){ map.invalidateSize(); }, 100);
+    }
+}
+
+document.getElementById('searchInput').addEventListener('input', function(){
+    var input = this.value.toLowerCase().trim();
+    var accordions = document.querySelectorAll('.accordion-item');
+    var totalVisible = 0;
+    accordions.forEach(function(acc){
+        var text    = acc.innerText.toLowerCase();
+        var header  = acc.querySelector('.accordion-header');
+        var content = acc.querySelector('.accordion-content');
+        var match   = text.indexOf(input) > -1;
+        acc.style.display = match ? '' : 'none';
+        if (match) {
+            totalVisible++;
+            if (input !== '') { header.classList.add('active'); content.style.maxHeight = content.scrollHeight + 40 + 'px'; }
+            else              { header.classList.remove('active'); content.style.maxHeight = null; }
+        }
+    });
+    var noResult = document.getElementById('noResult');
+    if (!noResult) {
+        noResult = document.createElement('p');
+        noResult.id = 'noResult';
+        noResult.style.cssText = 'text-align:center;color:var(--text-muted);padding:20px 0;font-size:15px;';
+        noResult.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="margin-right:6px;"></i>ไม่พบรายการที่ค้นหา';
+        document.getElementById('extinguisherList').after(noResult);
+    }
+    noResult.style.display = (totalVisible === 0 && input !== '') ? 'block' : 'none';
+});
+
+/* =====================================================
+   QR Scan จริง — ใช้ไลบรารี html5-qrcode
+   QR code บนถังเก็บแค่ "รหัสถัง" เช่น FE-001 (ดูวิธีสร้าง QR
+   สำหรับพิมพ์ติดถังได้ที่หน้า staff_tanks.html ฝั่งเจ้าหน้าที่)
+   ===================================================== */
+var html5QrCode = null;
+var qrScanHandled = false;
+
+function startQRScan() {
+    if (!fireDataList || fireDataList.length === 0) {
+        showToast('กำลังโหลดข้อมูลถัง กรุณารอสักครู่แล้วลองใหม่', 'info');
+        return;
+    }
+    if (typeof Html5Qrcode === 'undefined') {
+        showToast('โหลดตัวสแกนไม่สำเร็จ กรุณาเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่', 'error');
+        return;
+    }
+    qrScanHandled = false;
+    document.getElementById('qrScannerOverlay').style.display = 'flex';
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode('qrReader');
+    }
+    var config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    html5QrCode.start(
+        { facingMode: 'environment' },
+        config,
+        onQRScanSuccess,
+        function(){ /* เรียกทุกเฟรมที่สแกนไม่เจอ ไม่ต้องทำอะไร */ }
+    ).catch(function(){
+        showToast('ไม่สามารถเปิดกล้องได้ — ตรวจสอบว่าอนุญาตสิทธิ์กล้องแล้ว และเปิดเว็บผ่าน HTTPS หรือ localhost', 'error');
+        document.getElementById('qrScannerOverlay').style.display = 'none';
+    });
+}
+
+function onQRScanSuccess(decodedText) {
+    if (qrScanHandled) return;
+    var code = decodedText.trim();
+    var found = fireDataList.find(function(item){ return item.ID === code; });
+    if (!found) {
+        showToast('ไม่พบรหัสถัง "' + code + '" ในระบบ ลองสแกนใหม่', 'error');
+        return;
+    }
+    qrScanHandled = true;
+    closeQRScanner();
+    var inspectUrl = 'report_tank_issue.html?id=' + encodeURIComponent(found.ID) + '&name=' + encodeURIComponent(found.Location_Name || found.Community);
+    window.location.href = inspectUrl;
+}
+
+function closeQRScanner() {
+    document.getElementById('qrScannerOverlay').style.display = 'none';
+    if (html5QrCode) {
+        html5QrCode.stop().catch(function(){});
+    }
+}
+
+function openImageLightbox(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('imageLightbox').style.display = 'flex';
+}
+function closeImageLightbox() {
+    document.getElementById('imageLightbox').style.display = 'none';
+    document.getElementById('lightboxImg').src = '';
+}
+</script>
+
+<!-- Lightbox: ดูรูปถังดับเพลิงแบบเต็มจอ -->
+<div id="imageLightbox" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this) closeImageLightbox();">
+    <button onclick="closeImageLightbox()" aria-label="ปิด" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:40px;height:40px;color:#fff;font-size:20px;cursor:pointer;">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+    <img id="lightboxImg" src="" alt="ภาพถังดับเพลิงขนาดเต็ม" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;">
+</div>
+</body>
+</html>

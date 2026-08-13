@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียน - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<div class="app-container login-wrapper">
+
+    <header class="app-header">
+        <div class="header-back-row" style="margin-bottom:0;">
+            <div class="header-back-group">
+                <a href="login.html" class="back-arrow" aria-label="กลับหน้าเข้าสู่ระบบ">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">ลงทะเบียน</div>
+                    <div class="header-page-sub">เทศบาลตำบลบางพระ</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob"><i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i><i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="login-logo-section">
+        <div class="logo-circle-large" aria-hidden="true">
+            <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <h2 class="org-name">สร้างบัญชีประชาชน</h2>
+        <p class="org-sub">สำหรับติดตามเรื่องที่แจ้งและประวัติของคุณ</p>
+    </div>
+
+    <div class="login-form-section">
+        <div class="input-group">
+            <label for="regName">ชื่อ-นามสกุล</label>
+            <input type="text" id="regName" class="custom-input"
+                   placeholder="กรอกชื่อ-นามสกุล" autocomplete="name">
+        </div>
+
+        <div class="input-group">
+            <label for="regPhone">เบอร์โทรศัพท์</label>
+            <input type="tel" id="regPhone" class="custom-input digits-only"
+                   placeholder="กรอกเบอร์โทรศัพท์"
+                   autocomplete="tel" inputmode="tel">
+        </div>
+
+        <div class="input-group">
+            <label for="regPassword">รหัสผ่าน</label>
+            <div class="password-wrapper">
+                <input type="password" id="regPassword" class="custom-input"
+                       placeholder="ตั้งรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)"
+                       autocomplete="new-password">
+                <span class="eye-icon" id="toggle-password-1"
+                      role="button" tabindex="0"
+                      aria-label="แสดง/ซ่อนรหัสผ่าน">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="regPasswordConfirm">ยืนยันรหัสผ่าน</label>
+            <div class="password-wrapper">
+                <input type="password" id="regPasswordConfirm" class="custom-input"
+                       placeholder="กรอกรหัสผ่านอีกครั้ง"
+                       autocomplete="new-password">
+                <span class="eye-icon" id="toggle-password-2"
+                      role="button" tabindex="0"
+                      aria-label="แสดง/ซ่อนรหัสผ่าน">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </span>
+            </div>
+        </div>
+
+        <button class="btn-navy" id="registerBtn" type="button" style="margin-top:8px;">
+            <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+            <span id="registerBtnText">สร้างบัญชี</span>
+        </button>
+
+        <div class="register-link">
+            <a href="login.html">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</a>
+        </div>
+    </div>
+
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+function togglePasswordField(inputId, iconWrapId) {
+    var input = document.getElementById(inputId);
+    var icon  = document.querySelector('#' + iconWrapId + ' i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+    }
+}
+document.getElementById('toggle-password-1').addEventListener('click', function() {
+    togglePasswordField('regPassword', 'toggle-password-1');
+});
+document.getElementById('toggle-password-2').addEventListener('click', function() {
+    togglePasswordField('regPasswordConfirm', 'toggle-password-2');
+});
+
+function resetBtn() {
+    var btn = document.getElementById('registerBtn');
+    btn.disabled = false;
+    document.getElementById('registerBtnText').textContent = 'สร้างบัญชี';
+    btn.querySelector('i').className = 'fa-solid fa-user-plus';
+}
+
+document.getElementById('registerBtn').addEventListener('click', function() {
+    var name     = document.getElementById('regName').value.trim();
+    var phone    = document.getElementById('regPhone').value.trim();
+    var pass     = document.getElementById('regPassword').value.trim();
+    var passConf = document.getElementById('regPasswordConfirm').value.trim();
+
+    if (!name || !phone || !pass || !passConf) {
+        showToast('กรุณากรอกข้อมูลให้ครบทุกช่อง', 'error');
+        return;
+    }
+    if (!/^[0-9]{9,10}$/.test(phone)) {
+        showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง', 'error');
+        return;
+    }
+    if (pass.length < 6) {
+        showToast('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร', 'error');
+        return;
+    }
+    if (pass !== passConf) {
+        showToast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 'error');
+        return;
+    }
+
+    var btn = this;
+    btn.disabled = true;
+    document.getElementById('registerBtnText').textContent = 'กำลังสร้างบัญชี...';
+    btn.querySelector('i').className = 'fa-solid fa-spinner fa-spin';
+    showToast('กำลังลงทะเบียน...', 'info');
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            type    : 'register',
+            phone   : phone,
+            password: pass,
+            name    : name,
+        }),
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showToast('ลงทะเบียนสำเร็จ! กำลังพาไปหน้าเข้าสู่ระบบ', 'success');
+            setTimeout(function() {
+                window.location.href = 'login.html';
+            }, 1200);
+        } else {
+            showToast(data.message || 'ลงทะเบียนไม่สำเร็จ', 'error');
+            resetBtn();
+        }
+    })
+    .catch(function() {
+        showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+        resetBtn();
+    });
+});
+
+document.getElementById('regPasswordConfirm').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('registerBtn').click();
+});
+</script>
+</body>
+</html>

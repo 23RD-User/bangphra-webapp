@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งปัญหาถังดับเพลิง</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+</head>
+<body>
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="fire_extinguisher.html" class="back-arrow" aria-label="กลับหน้ารายการถัง">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">แจ้งปัญหาถังดับเพลิง</div>
+                    <div class="header-page-sub">พบเห็นถังชำรุดหรือสูญหาย แจ้งได้เลย</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob">
+                    <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+        <!-- Tank info -->
+        <div class="header-tank-info">
+            <div class="header-tank-ic">
+                <i class="fa-solid fa-fire-extinguisher" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div class="header-tank-id" id="tankIdLabel">รหัสถัง: —</div>
+                <div class="header-tank-loc" id="tankLocationLabel">กำลังโหลด...</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top:16px;">
+        <div class="section-box">
+            <h3 style="font-size:var(--fs-base);margin-bottom:16px;padding-bottom:12px;border-bottom:0.5px solid var(--divider);color:var(--text-primary);font-weight:700;">
+                รายละเอียดปัญหาที่พบ
+            </h3>
+
+            <div class="input-group">
+                <label for="issueDesc">เป็นอะไร / เกิดอะไรขึ้น</label>
+                <textarea id="issueDesc" class="custom-input" rows="4"
+                          placeholder="เช่น ถังหาย, สายฉีดขาด, สลักหลุด..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>
+                    <i class="fa-solid fa-camera" style="color:var(--accent);margin-right:6px;" aria-hidden="true"></i>
+                    ภาพถ่ายถังดับเพลิง (ถ้ามี)
+                </label>
+                <label for="cameraInput" class="camera-upload-box" id="uploadBox">
+                    <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                    <span>แตะเพื่อถ่ายรูป</span>
+                </label>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment"
+                       style="display:none;" aria-label="ถ่ายรูปถังดับเพลิง">
+                <div id="imagePreviewContainer" class="image-preview-container" style="display:none;">
+                    <img id="imagePreview" src="" alt="ภาพถ่ายถังดับเพลิง">
+                    <button type="button" class="remove-img-btn" id="removeImgBtn" aria-label="ลบรูปภาพ">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-navy" id="submitBtn" type="button" style="margin-top:8px;">
+                <i class="fa-solid fa-paper-plane" id="submitIcon" aria-hidden="true"></i>
+                <span id="submitBtnText">ส่งแจ้งปัญหา</span>
+            </button>
+
+            <p style="text-align:center;font-size:var(--fs-xs);color:var(--text-muted);margin-top:10px;">
+                <i class="fa-solid fa-circle-info" style="margin-right:5px;" aria-hidden="true"></i>
+                เจ้าหน้าที่จะได้รับแจ้งและดำเนินการตรวจสอบต่อไป
+            </p>
+        </div>
+    </main>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+var currentBase64 = '';
+
+(function loadTankInfo(){
+    var params   = new URLSearchParams(window.location.search);
+    var tankId   = params.get('id')   || '—';
+    var tankName = params.get('name') || 'ไม่ระบุสถานที่';
+    document.getElementById('tankIdLabel').textContent      = 'รหัสถัง: ' + tankId;
+    document.getElementById('tankLocationLabel').textContent = tankName;
+})();
+
+document.getElementById('cameraInput').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('imagePreview').src = URL.createObjectURL(file);
+    document.getElementById('uploadBox').style.display = 'none';
+    document.getElementById('imagePreviewContainer').style.display = 'block';
+
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        currentBase64 = event.target.result.split(',')[1];
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('removeImgBtn').addEventListener('click', function() {
+    document.getElementById('cameraInput').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('uploadBox').style.display = 'flex';
+    currentBase64 = '';
+});
+
+function resetBtn() {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = false; btn.style.opacity = '1';
+    document.getElementById('submitBtnText').textContent = 'ส่งแจ้งปัญหา';
+    document.getElementById('submitIcon').className = 'fa-solid fa-paper-plane';
+}
+
+document.getElementById('submitBtn').addEventListener('click', async function() {
+    var desc   = document.getElementById('issueDesc').value.trim();
+    var tankId = document.getElementById('tankIdLabel').textContent.replace('รหัสถัง: ', '');
+    if (!desc) { showToast('กรุณากรอกรายละเอียดปัญหาที่พบ', 'error'); document.getElementById('issueDesc').focus(); return; }
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.style.opacity = '0.7';
+    document.getElementById('submitBtnText').textContent = 'กำลังส่ง...';
+    document.getElementById('submitIcon').className = 'fa-solid fa-spinner fa-spin';
+    showToast('กำลังส่งข้อมูล...', 'info');
+    try {
+        var res = await fetch(SCRIPT_URL, {
+            method:'POST',
+            body:JSON.stringify({ type:'reportTankIssue', equipmentId:tankId, description:desc, imageUrl:currentBase64 }),
+        });
+        var json = await res.json();
+        if (json.success) {
+            showToast('ส่งแจ้งปัญหาสำเร็จ ขอบคุณครับ', 'success');
+            setTimeout(function(){ window.location.href = 'fire_extinguisher.html'; }, 1800);
+        } else {
+            showToast('เกิดข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'), 'error');
+            resetBtn();
+        }
+    } catch(err) {
+        showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+        resetBtn();
+    }
+});
+</script>
+</body>
+</html>

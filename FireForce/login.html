@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<div class="app-container login-wrapper">
+
+    <header class="app-header">
+        <div class="header-back-row" style="margin-bottom:0;">
+            <div class="header-back-group">
+                <a href="index.html" class="back-arrow" aria-label="กลับหน้าหลัก">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">เข้าสู่ระบบ</div>
+                    <div class="header-page-sub">เทศบาลตำบลบางพระ</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob"><i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i><i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="login-logo-section">
+        <div class="logo-circle-large" aria-hidden="true">
+            <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <h2 class="org-name">เทศบาลตำบลบางพระ</h2>
+        <p class="org-sub">Bangphra Municipality</p>
+    </div>
+
+    <!-- Role Selector -->
+    <div style="padding:0 var(--pad-page);margin-bottom:20px;">
+        <div style="display:flex;background:var(--bg-card);border-radius:var(--radius-sm);padding:4px;border:0.5px solid var(--border);" role="group" aria-label="เลือกประเภทผู้ใช้">
+            <button id="rolePublic" type="button" onclick="setRole('public')"
+                style="flex:1;padding:10px;border:none;border-radius:10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;background:var(--navy);color:white;transition:all .2s;"
+                aria-pressed="true">
+                <i class="fa-solid fa-user" aria-hidden="true"></i> ประชาชน
+            </button>
+            <button id="roleStaff" type="button" onclick="setRole('staff')"
+                style="flex:1;padding:10px;border:none;border-radius:10px;font-size:var(--fs-sm);font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;background:transparent;color:var(--text-muted);transition:all .2s;"
+                aria-pressed="false">
+                <i class="fa-solid fa-id-badge" aria-hidden="true"></i> เจ้าหน้าที่
+            </button>
+        </div>
+        <p id="roleDesc" style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:8px;">
+            เข้าสู่ระบบในฐานะ <strong style="color:var(--navy);">ประชาชนทั่วไป</strong>
+        </p>
+    </div>
+
+    <div class="login-form-section">
+        <div class="input-group">
+            <label for="phone" id="phoneLbl">เบอร์โทรศัพท์</label>
+            <input type="tel" id="phone" class="custom-input"
+                   placeholder="กรอกเบอร์โทรศัพท์"
+                   autocomplete="tel" inputmode="tel">
+        </div>
+
+        <div class="input-group">
+            <label for="password">รหัสผ่าน</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" class="custom-input"
+                       placeholder="กรอกรหัสผ่าน"
+                       autocomplete="current-password">
+                <span class="eye-icon" id="toggle-password"
+                      role="button" tabindex="0"
+                      aria-label="แสดง/ซ่อนรหัสผ่าน">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- ช่องรหัสเจ้าหน้าที่ — แสดงเฉพาะตอนเลือก staff -->
+        <div class="input-group" id="staffCodeGroup" style="display:none;">
+            <label for="staffCode">รหัสเจ้าหน้าที่</label>
+            <input type="text" id="staffCode" class="custom-input"
+                   placeholder="กรอกรหัสประจำตัวเจ้าหน้าที่"
+                   autocomplete="off">
+        </div>
+
+        <div class="forgot-password">
+            <a href="#">ลืมรหัสผ่าน?</a>
+        </div>
+
+        <button class="btn-navy" id="loginBtn" type="button">
+            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+            ลงชื่อเข้าใช้
+        </button>
+
+        <div class="register-link" id="registerLink">
+            <a href="register.html">ยังไม่มีบัญชี? ลงทะเบียน</a>
+        </div>
+    </div>
+
+    <div class="social-login-section" id="socialSection">
+        <div class="divider"><span>หรือเข้าสู่ระบบด้วย</span></div>
+        <button class="btn-social btn-google" type="button"
+                onclick="showToast('กำลังเชื่อมต่อ Gmail...', 'info')">
+            <div class="icon-bg bg-red" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
+            <span>ล็อกอินผ่าน Gmail</span>
+        </button>
+        <button class="btn-social btn-line" type="button"
+                onclick="showToast('กำลังเชื่อมต่อ LINE...', 'info')">
+            <div class="icon-bg bg-green" aria-hidden="true"><i class="fa-brands fa-line"></i></div>
+            <span>ล็อกอินผ่าน LINE</span>
+        </button>
+    </div>
+
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+var currentRole = 'public';
+
+function setRole(role) {
+    currentRole = role;
+    var isStaff = role === 'staff';
+
+    document.getElementById('rolePublic').style.background = isStaff ? 'transparent' : 'var(--navy)';
+    document.getElementById('rolePublic').style.color      = isStaff ? 'var(--text-muted)' : 'white';
+    document.getElementById('roleStaff').style.background  = isStaff ? 'var(--accent)' : 'transparent';
+    document.getElementById('roleStaff').style.color       = isStaff ? 'white' : 'var(--text-muted)';
+    document.getElementById('rolePublic').setAttribute('aria-pressed', isStaff ? 'false' : 'true');
+    document.getElementById('roleStaff').setAttribute('aria-pressed', isStaff ? 'true' : 'false');
+
+    var phoneLbl   = document.getElementById('phoneLbl');
+    var phoneInput = document.getElementById('phone');
+    if (isStaff) {
+        phoneLbl.textContent   = 'เบอร์โทร / อีเมล';
+        phoneInput.placeholder = 'กรอกเบอร์โทรหรืออีเมล';
+        phoneInput.inputMode   = 'text';
+    } else {
+        phoneLbl.textContent   = 'เบอร์โทรศัพท์';
+        phoneInput.placeholder = 'กรอกเบอร์โทรศัพท์';
+        phoneInput.inputMode   = 'tel';
+    }
+
+    /* แสดง/ซ่อนช่องรหัสเจ้าหน้าที่ */
+    document.getElementById('staffCodeGroup').style.display = isStaff ? 'block' : 'none';
+    /* ซ่อน social login และ register สำหรับ staff */
+    document.getElementById('socialSection').style.display  = isStaff ? 'none' : 'block';
+    document.getElementById('registerLink').style.display   = isStaff ? 'none' : 'block';
+
+    document.getElementById('roleDesc').innerHTML = isStaff
+        ? 'เข้าสู่ระบบในฐานะ <strong style="color:var(--accent);">เจ้าหน้าที่เทศบาล</strong>'
+        : 'เข้าสู่ระบบในฐานะ <strong style="color:var(--navy);">ประชาชนทั่วไป</strong>';
+}
+
+/* จำกัดให้กรอกได้เฉพาะตัวเลข — เฉพาะตอนเลือกโหมด "ประชาชน" เท่านั้น
+   เพราะโหมด "เจ้าหน้าที่" ช่องเดียวกันนี้ใช้กรอกอีเมลได้ด้วย
+   (ไม่ใช้ restrictDigitsOnly() ตรงๆ เพราะฟังก์ชันนั้นกรองทุกครั้งไม่แยกโหมด) */
+document.getElementById('phone').addEventListener('input', function() {
+    if (currentRole !== 'public') return;
+    var pos    = this.selectionStart;
+    var before = this.value;
+    var cleaned = digitsOnlyValue(before);
+    if (cleaned !== before) {
+        this.value = cleaned;
+        var diff = before.length - cleaned.length;
+        if (pos !== null) {
+            var newPos = Math.max(0, pos - diff);
+            this.setSelectionRange(newPos, newPos);
+        }
+    }
+});
+
+function resetBtn() {
+    var btn = document.getElementById('loginBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> ลงชื่อเข้าใช้';
+}
+
+document.getElementById('loginBtn').addEventListener('click', function() {
+    var phone = document.getElementById('phone').value.trim();
+    var pass  = document.getElementById('password').value.trim();
+
+    if (!phone || !pass) {
+        showToast('กรุณากรอกข้อมูลให้ครบ', 'error'); return;
+    }
+
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
+
+    if (currentRole === 'public') {
+        showToast('กำลังเข้าสู่ระบบ...', 'info');
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                type    : 'loginPublic',
+                phone   : phone,
+                password: pass,
+            }),
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                sessionStorage.setItem('userRole',  'public');
+                sessionStorage.setItem('userName',  data.name);
+                sessionStorage.setItem('userPhone', data.phone);
+                showToast('ยินดีต้อนรับ ' + data.name + '!', 'success');
+                setTimeout(function() {
+                    window.location.href = 'index.html';
+                }, 900);
+            } else {
+                showToast(data.message || 'เบอร์โทรหรือรหัสผ่านไม่ถูกต้อง', 'error');
+                resetBtn();
+            }
+        })
+        .catch(function() {
+            showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+            resetBtn();
+        });
+        return;
+    }
+
+    showToast('กำลังตรวจสอบสิทธิ์...', 'info');
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            type    : 'login',
+            phone   : phone,
+            password: pass,
+        }),
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            sessionStorage.setItem('userRole',   data.role);
+            sessionStorage.setItem('staffName',  data.name);
+            sessionStorage.setItem('staffPhone', data.phone);
+            /* เก็บ token ไว้แนบไปทุกครั้งที่จะแก้ไขข้อมูล (ระบบยืนยันสิทธิ์) */
+            sessionStorage.setItem('staffToken', data.token || '');
+            showToast('ยินดีต้อนรับ ' + data.name + '!', 'success');
+            setTimeout(function() {
+                window.location.href = 'staff_dashboard.html';
+            }, 900);
+        } else {
+            showToast(data.message || 'เบอร์โทรหรือรหัสผ่านไม่ถูกต้อง', 'error');
+            resetBtn();
+        }
+    })
+    .catch(function() {
+        showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+        resetBtn();
+    });
+});
+
+document.getElementById('password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+</script>
+</body>
+</html>

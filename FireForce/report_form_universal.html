@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แจ้งเหตุ - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+</head>
+<body>
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="report.html" class="back-arrow" aria-label="กลับหน้าร้องเรียน">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title" id="pageTitle">แจ้งเหตุ</div>
+                    <div class="header-page-sub" id="pageSubTitle">กำลังโหลด...</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob">
+                    <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+        <a href="tel:038357888" class="emg-strip"
+           onclick="event.preventDefault(); confirmCall('038-357888','สายด่วนดับเพลิงเทศบาลตำบลบางพระ');"
+           aria-label="โทรสายด่วนดับเพลิง 038-357888">
+            <div class="emg-strip-left">
+                <i class="fa-solid fa-phone-volume" aria-hidden="true"></i>
+                เหตุด่วนเหตุร้าย กดโทรเลย!
+            </div>
+            <div class="emg-strip-num">038-357888</div>
+        </a>
+    </header>
+
+    <main class="main-content" style="padding-top:16px;">
+
+        <!-- Category badge -->
+        <div class="category-display" id="categoryDisplay">
+            <div class="category-display-icon">
+                <i id="categoryIcon" class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div class="category-display-name" id="categoryName">กำลังโหลด...</div>
+                <div class="category-display-sub">เลือกหมวดหมู่แล้ว</div>
+            </div>
+        </div>
+
+        <div class="section-box" style="margin-top:14px;">
+            <h3 style="font-size:var(--fs-base);margin-bottom:16px;padding-bottom:12px;border-bottom:0.5px solid var(--divider);color:var(--text-primary);font-weight:700;">
+                รายละเอียดการแจ้งเหตุ
+            </h3>
+
+            <div class="input-group" id="disasterTypeGroup" style="display:none;">
+                <label for="disasterType">ประเภทสาธารณภัย</label>
+                <select id="disasterType" class="custom-input">
+                    <option value="">— กรุณาเลือกประเภท —</option>
+                    <option value="ไฟไหม้">ไฟไหม้</option>
+                    <option value="น้ำท่วม">น้ำท่วม</option>
+                    <option value="วาตภัย">วาตภัย (พายุ/ลม)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="reporterName">ชื่อผู้แจ้งเหตุ</label>
+                <input type="text" id="reporterName" class="custom-input"
+                       placeholder="กรอกชื่อ-นามสกุล" autocomplete="name">
+            </div>
+
+            <div class="input-group">
+                <label for="reporterPhone">เบอร์โทรกลับ</label>
+                <input type="tel" id="reporterPhone" class="custom-input digits-only"
+                       placeholder="0XX-XXX-XXXX" autocomplete="tel" inputmode="tel">
+            </div>
+
+            <div class="input-group">
+                <label>
+                    <i class="fa-solid fa-location-dot" style="color:var(--accent);margin-right:6px;" aria-hidden="true"></i>
+                    ตำแหน่งเกิดเหตุ
+                </label>
+                <div class="location-box">
+                    <div class="map-placeholder">
+                        <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                        <p id="locationText">ยังไม่ได้ดึงพิกัด</p>
+                    </div>
+                    <button class="btn-gps-full" type="button" onclick="getLocation()" aria-label="ดึงพิกัดปัจจุบัน">
+                        <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                        กดเพื่อดึงพิกัดปัจจุบัน
+                    </button>
+                </div>
+                <div id="pinMapWrap" style="display:none;margin-top:10px;">
+                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">
+                        <i class="fa-solid fa-hand-pointer" aria-hidden="true"></i>
+                        ไม่สามารถดึง GPS ได้ กรุณาแตะหรือลากหมุดไปยังตำแหน่งที่เกิดเหตุบนแผนที่
+                    </p>
+                    <div id="pinMap" style="width:100%;height:240px;border-radius:var(--radius-md);box-shadow:var(--shadow-md);"></div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="incidentDetails">รายละเอียดเหตุการณ์</label>
+                <textarea id="incidentDetails" class="custom-input" rows="3"
+                          placeholder="ระบุสถานที่และสิ่งที่เห็น..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>
+                    <i class="fa-solid fa-camera" style="color:var(--accent);margin-right:6px;" aria-hidden="true"></i>
+                    ภาพถ่ายสถานที่เกิดเหตุ
+                </label>
+                <label for="reportCamera" class="camera-upload-box" id="reportUploadBox">
+                    <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                    <span>แตะเพื่อถ่ายรูป / เลือกรูป</span>
+                </label>
+                <input type="file" id="reportCamera" accept="image/*" style="display:none;" aria-label="เลือกรูปภาพ">
+                <div id="reportImgPreviewContainer" class="image-preview-container" style="display:none;">
+                    <img id="reportImagePreview" src="" alt="ภาพถ่ายเหตุการณ์">
+                    <button type="button" class="remove-img-btn" id="removeReportImgBtn" aria-label="ลบรูปภาพ">
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="submitReportBtn" type="button" style="margin-top:6px;">
+                <i class="fa-solid fa-paper-plane" id="submitIcon" aria-hidden="true"></i>
+                <span id="submitBtnText">ส่งข้อมูลแจ้งเหตุ</span>
+            </button>
+
+            <p class="line-notice">
+                <i class="fa-brands fa-line" style="color:#00C300;" aria-hidden="true"></i>
+                ระบบจะแจ้งเตือนเจ้าหน้าที่ผ่าน LINE อัตโนมัติ
+            </p>
+        </div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="เมนูหลัก">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-house"></i></span>
+            <span class="nav-text">หน้าหลัก</span>
+        </a>
+        <a href="report.html" class="nav-item active" aria-current="page">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span class="nav-text">ร้องเรียน</span>
+        </a>
+        <a href="track.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="nav-text">ติดตาม</span>
+        </a>
+        <a href="login.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="nav-text">โปรไฟล์</span>
+        </a>
+    </nav>
+</div>
+<script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+// ตัวแปรสำหรับเก็บข้อมูลรูปภาพที่แปลงเป็น Base64 แล้ว
+var currentBase64 = ''; 
+
+var CATEGORIES = {
+    disaster : { label:'สาธารณภัย', icon:'fa-solid fa-fire' },
+};
+
+var currentType = 'disaster';
+(function(){
+    currentType = new URLSearchParams(window.location.search).get('type') || 'disaster';
+    var cat = CATEGORIES[currentType] || CATEGORIES.disaster;
+    document.getElementById('pageTitle').textContent    = 'แจ้งเหตุ';
+    document.getElementById('pageSubTitle').textContent = cat.label;
+    document.getElementById('categoryName').textContent = cat.label;
+    document.getElementById('categoryIcon').className   = cat.icon;
+
+    if (currentType === 'disaster') {
+        document.getElementById('disasterTypeGroup').style.display = 'block';
+    }
+})();
+
+var currentLocation = '';
+var pinMap = null;
+var pinMarker = null;
+
+function getLocation() {
+    showToast('กำลังค้นหาพิกัด...', 'info');
+    if (!navigator.geolocation) {
+        showToast('เบราว์เซอร์ไม่รองรับ GPS — กรุณาปักหมุดเอง', 'error');
+        openPinMap();
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            var lat = pos.coords.latitude.toFixed(6);
+            var lng = pos.coords.longitude.toFixed(6);
+            currentLocation = lat + ', ' + lng;
+            document.getElementById('locationText').innerHTML = '<strong>พิกัด:</strong> ' + currentLocation;
+            document.getElementById('pinMapWrap').style.display = 'none';
+            showToast('ดึงพิกัดสำเร็จ!', 'success');
+        },
+        function() {
+            showToast('ไม่สามารถดึง GPS ได้ — กรุณาปักหมุดเองบนแผนที่', 'error');
+            openPinMap();
+        }
+    );
+}
+
+/* =====================================================
+   แผนที่ปักหมุดเอง — ใช้เมื่อ GPS ดึงไม่สำเร็จ
+   ผู้แจ้งแตะ/ลากหมุดไปยังตำแหน่งที่ใกล้เคียงเหตุการณ์ที่สุด
+   ===================================================== */
+function openPinMap() {
+    document.getElementById('pinMapWrap').style.display = 'block';
+    document.getElementById('locationText').textContent = 'กรุณาปักหมุดบนแผนที่ด้านล่าง';
+
+    if (pinMap) {
+        setTimeout(function(){ pinMap.invalidateSize(); }, 100);
+        return;
+    }
+
+    var startLatLng = [13.2100, 100.9450]; // ใจกลางตำบลบางพระ
+    pinMap = L.map('pinMap').setView(startLatLng, 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(pinMap);
+
+    var pinIcon = L.divIcon({
+        html:'<div style="background:#E8491E;color:white;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 5px rgba(0,0,0,.4);"><i class="fa-solid fa-fire" style="transform:rotate(45deg);font-size:13px;"></i></div>',
+        className:'', iconSize:[30,30], iconAnchor:[15,30]
+    });
+
+    pinMarker = L.marker(startLatLng, { icon:pinIcon, draggable:true }).addTo(pinMap);
+    updateLocationFromPin(startLatLng[0], startLatLng[1]);
+
+    pinMarker.on('dragend', function(e){
+        var pos = e.target.getLatLng();
+        updateLocationFromPin(pos.lat, pos.lng);
+    });
+    pinMap.on('click', function(e){
+        pinMarker.setLatLng(e.latlng);
+        updateLocationFromPin(e.latlng.lat, e.latlng.lng);
+    });
+
+    setTimeout(function(){ pinMap.invalidateSize(); }, 100);
+}
+
+function updateLocationFromPin(lat, lng) {
+    currentLocation = lat.toFixed(6) + ', ' + lng.toFixed(6) + ' (ปักหมุดเอง)';
+    document.getElementById('locationText').innerHTML = '<strong>พิกัด:</strong> ' + currentLocation;
+}
+
+// ==========================================
+// ส่วนที่เพิ่มใหม่: จัดการแปลงรูปภาพเป็น Base64
+// ==========================================
+document.getElementById('reportCamera').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    
+    // แสดงตัวอย่างรูปภาพบนหน้าจอ
+    document.getElementById('reportImagePreview').src = URL.createObjectURL(file);
+    document.getElementById('reportUploadBox').style.display = 'none';
+    document.getElementById('reportImgPreviewContainer').style.display = 'block';
+
+    // ใช้ FileReader เพื่อแปลงภาพเป็น Base64
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        // event.target.result จะได้ข้อความเช่น "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+        // เราจะตัดคำนำหน้าออก เอาเฉพาะข้อมูล Base64 จริงๆ ไปใช้งาน
+        currentBase64 = event.target.result.split(',')[1]; 
+    };
+    reader.readAsDataURL(file); // สั่งให้อ่านไฟล์
+});
+
+document.getElementById('removeReportImgBtn').addEventListener('click', function() {
+    document.getElementById('reportCamera').value = '';
+    document.getElementById('reportImagePreview').src = '';
+    document.getElementById('reportImgPreviewContainer').style.display = 'none';
+    document.getElementById('reportUploadBox').style.display = 'flex';
+    
+    currentBase64 = ''; // เคลียร์ค่า Base64 ทิ้งเมื่อผู้ใช้กดยกเลิกรูปภาพ
+});
+
+function resetBtn() {
+    var btn = document.getElementById('submitReportBtn');
+    btn.disabled = false; btn.style.opacity = '1';
+    document.getElementById('submitBtnText').textContent = 'ส่งข้อมูลแจ้งเหตุ';
+    document.getElementById('submitIcon').className = 'fa-solid fa-paper-plane';
+}
+
+document.getElementById('submitReportBtn').addEventListener('click', async function() {
+    var name    = document.getElementById('reporterName').value.trim();
+    var phone   = document.getElementById('reporterPhone').value.trim();
+    var details = document.getElementById('incidentDetails').value.trim();
+    
+    if (!name)    { showToast('กรุณากรอกชื่อผู้แจ้งเหตุ', 'error'); document.getElementById('reporterName').focus(); return; }
+    if (!phone)   { showToast('กรุณากรอกเบอร์โทรกลับ', 'error'); document.getElementById('reporterPhone').focus(); return; }
+    if (!/^0[0-9]{8,9}$/.test(phone)) {
+        showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (10 หลัก ขึ้นต้นด้วย 0)', 'error');
+        document.getElementById('reporterPhone').focus();
+        return;
+    }
+    if (!currentLocation) {
+        showToast('กรุณาดึงพิกัดหรือปักหมุดตำแหน่งเกิดเหตุก่อนส่งเรื่อง', 'error');
+        return;
+    }
+    if (!details) { showToast('กรุณากรอกรายละเอียดเหตุการณ์', 'error'); document.getElementById('incidentDetails').focus(); return; }
+
+    var subCategory = '';
+    if (currentType === 'disaster') {
+        subCategory = document.getElementById('disasterType').value;
+        if (!subCategory) { showToast('กรุณาเลือกประเภทสาธารณภัย', 'error'); document.getElementById('disasterType').focus(); return; }
+    }
+    
+    var btn = document.getElementById('submitReportBtn');
+    btn.disabled = true; btn.style.opacity = '0.7';
+    document.getElementById('submitBtnText').textContent = 'กำลังส่งข้อมูล...';
+    document.getElementById('submitIcon').className = 'fa-solid fa-spinner fa-spin';
+    showToast('กำลังส่งข้อมูลแจ้งเหตุ...', 'info');
+    
+    try {
+        var res = await fetch(SCRIPT_URL, {
+            method:'POST',
+            body:JSON.stringify({ 
+                type: 'report', 
+                category: currentType,
+                subCategory: subCategory,
+                reporterName: name, 
+                reporterPhone: phone, 
+                location: currentLocation, 
+                details: details, 
+                imageUrl: currentBase64 // ส่งข้อมูลภาพ Base64 ไปด้วย (ถ้าไม่มีรูปจะเป็นค่าว่าง '')
+            }),
+        });
+        var json = await res.json();
+        if (json.success) {
+            showToast('ส่งเรื่องร้องเรียนสำเร็จ! เจ้าหน้าที่จะติดต่อกลับ', 'success');
+            setTimeout(function(){ window.location.href = 'report.html'; }, 1800);
+        } else {
+            showToast('เกิดข้อผิดพลาด: ' + (json.message || 'ไม่ทราบสาเหตุ'), 'error');
+            resetBtn();
+        }
+    } catch(err) {
+        showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+        resetBtn();
+    }
+});
+</script>
+</body>
+</html>

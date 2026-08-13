@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เรื่องร้องเรียน - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <style>
+        /* ✅ เปลี่ยน report-grid เป็น 2 คอลัมน์ + card ใหญ่ขึ้น กดง่ายขึ้น */
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .report-card {
+            min-height: 100px;
+            padding: 18px 14px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 14px;
+            justify-content: flex-start;
+        }
+        .report-card-icon {
+            width: 48px; height: 48px;
+            background: var(--blue-light);
+            border-radius: 13px;
+            border: 1px solid var(--blue-border);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            position: static;
+        }
+        .report-card-icon i {
+            font-size: 22px;
+            color: var(--blue-mid);
+            opacity: 1;
+        }
+        .report-card-title {
+            font-size: var(--fs-base);
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: left;
+            line-height: 1.35;
+            position: static;
+            z-index: auto;
+        }
+        /* ลบ ::after pseudo ที่ทำวงกลมพื้นหลัง เพราะ layout เปลี่ยนแล้ว */
+        .report-card::after { display: none; }
+
+        /* card "อื่นๆ" span เต็มแถว */
+        .report-card.full-width {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SKELETON -->
+<div class="skeleton-screen" id="skeletonScreen">
+    <div class="app-container">
+        <div style="background:#1C2B4A;padding:14px 16px 20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="skel" style="width:32px;height:32px;border-radius:50%;"></div>
+                    <div class="skel skel-bar" style="width:100px;height:14px;"></div>
+                </div>
+                <div class="skel" style="width:32px;height:32px;border-radius:50%;"></div>
+            </div>
+            <div class="skel skel-bar" style="width:100%;height:36px;border-radius:10px;"></div>
+        </div>
+        <div style="padding:16px;">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                <div class="skel skel-bar" style="height:100px;border-radius:14px;"></div>
+                <div class="skel skel-bar" style="height:100px;border-radius:14px;"></div>
+                <div class="skel skel-bar" style="height:100px;border-radius:14px;"></div>
+                <div class="skel skel-bar" style="height:100px;border-radius:14px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-container page-content" id="pageContent" style="display:none;opacity:0;">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="index.html" class="back-arrow" aria-label="กลับหน้าหลัก">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">เรื่องร้องเรียน</div>
+                    <div class="header-page-sub">เลือกหมวดหมู่</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                    <span class="toggle-knob">
+                        <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                        <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+        <a href="tel:038357888" class="emg-strip"
+           onclick="event.preventDefault(); confirmCall('038-357888','สายด่วนดับเพลิงเทศบาลตำบลบางพระ');"
+           aria-label="โทรสายด่วนดับเพลิง 038-357888">
+            <div class="emg-strip-left">
+                <i class="fa-solid fa-phone-volume" aria-hidden="true"></i>
+                เหตุด่วนเหตุร้าย โทรเลย!
+            </div>
+            <div class="emg-strip-num">038-357888</div>
+        </a>
+    </header>
+
+    <main class="main-content">
+        <p style="font-size:var(--fs-sm);color:var(--text-muted);margin-bottom:14px;font-weight:600;">
+            เลือกหมวดหมู่ที่ต้องการแจ้งเหตุ
+        </p>
+
+        <div class="report-grid" role="list">
+            <a href="report_form_universal.html?type=disaster" class="report-card full-width" role="listitem" aria-label="แจ้งเรื่องสาธารณภัย">
+                <div class="report-card-icon" style="width:56px;height:56px;border-radius:15px;">
+                    <i class="fa-solid fa-fire" aria-hidden="true" style="font-size:26px;"></i>
+                </div>
+                <div>
+                    <div class="report-card-title" style="font-size:var(--fs-md);">สาธารณภัย</div>
+                    <div style="font-size:var(--fs-xs);color:var(--text-muted);margin-top:3px;">ไฟไหม้ · น้ำท่วม · วาตภัย</div>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <nav class="bottom-nav" aria-label="เมนูหลัก">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-house"></i></span>
+            <span class="nav-text">หน้าหลัก</span>
+        </a>
+        <a href="report.html" class="nav-item active" aria-current="page">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span class="nav-text">ร้องเรียน</span>
+        </a>
+        <a href="track.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="nav-text">ติดตาม</span>
+        </a>
+        <a href="login.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="nav-text">โปรไฟล์</span>
+        </a>
+    </nav>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+</body>
+</html>
