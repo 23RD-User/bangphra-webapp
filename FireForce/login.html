@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
@@ -103,8 +104,7 @@
 
     <div class="social-login-section" id="socialSection">
         <div class="divider"><span>หรือเข้าสู่ระบบด้วย</span></div>
-        <button class="btn-social btn-google" type="button"
-                onclick="showToast('กำลังเชื่อมต่อ Gmail...', 'info')">
+        <button class="btn-social btn-google" type="button" id="googleLoginBtn">
             <div class="icon-bg bg-red" aria-hidden="true"><i class="fa-regular fa-envelope"></i></div>
             <span>ล็อกอินผ่าน Gmail</span>
         </button>
@@ -121,7 +121,68 @@
 <script src="script.js"></script>
 <script>
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+var GOOGLE_CLIENT_ID = '190568755025-u81it2adempve42s9pfj3fpm9sav52bp.apps.googleusercontent.com';
 var currentRole = 'public';
+
+/* ===== Google Login ===== */
+var googleTokenClient = null;
+window.addEventListener('load', function() {
+    if (typeof google === 'undefined' || !google.accounts) return;
+    googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        callback: function(tokenResponse) {
+            if (!tokenResponse || !tokenResponse.access_token) {
+                showToast('เข้าสู่ระบบด้วย Google ไม่สำเร็จ', 'error');
+                return;
+            }
+            fetchGoogleProfileAndLogin(tokenResponse.access_token);
+        },
+    });
+});
+
+document.getElementById('googleLoginBtn').addEventListener('click', function() {
+    if (!googleTokenClient) {
+        showToast('ไม่สามารถเชื่อมต่อ Google ได้ กรุณาลองใหม่', 'error');
+        return;
+    }
+    googleTokenClient.requestAccessToken();
+});
+
+function fetchGoogleProfileAndLogin(accessToken) {
+    showToast('กำลังเชื่อมต่อ Gmail...', 'info');
+    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: 'Bearer ' + accessToken },
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(profile){
+        showToast('เชื่อมต่อ Gmail สำเร็จ กำลังตรวจสอบบัญชี...', 'info');
+        return fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                type : 'loginGoogle',
+                email: profile.email,
+                name : profile.name,
+            }),
+        });
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+        if (data.success) {
+            sessionStorage.setItem('userRole', 'public');
+            sessionStorage.setItem('userName', data.name);
+            sessionStorage.setItem('userPhone', ''); /* บัญชี Google ไม่มีเบอร์โทร */
+            showToast('ยินดีต้อนรับ ' + data.name + '!', 'success');
+            setTimeout(function(){ window.location.href = 'index.html'; }, 900);
+        } else {
+            showToast(data.message || 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ', 'error');
+        }
+    })
+    .catch(function(){
+        showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+    });
+}
+
 
 function setRole(role) {
     currentRole = role;
