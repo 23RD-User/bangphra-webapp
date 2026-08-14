@@ -1,0 +1,38 @@
+{
+  "name": "เทศบาลตำบลบางพระ - ระบบแจ้งภัย",
+  "short_name": "บางพระ",
+  "description": "ระบบแจ้งสาธารณภัยและตรวจสอบถังดับเพลิง เทศบาลตำบลบางพระ",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1C2B4A",
+  "theme_color": "#1C2B4A",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
