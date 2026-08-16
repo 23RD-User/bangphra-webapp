@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรไฟล์ - เทศบาลตำบลบางพระ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1C2B4A">
+    <script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+</head>
+<body>
+<div class="app-container">
+
+    <header class="app-header">
+        <div class="header-back-row">
+            <div class="header-back-group">
+                <a href="index.html" class="back-arrow" aria-label="กลับหน้าหลัก">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <div>
+                    <div class="header-page-title">โปรไฟล์</div>
+                    <div class="header-page-sub">ข้อมูลบัญชีของฉัน</div>
+                </div>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="สลับธีม">
+                <span class="toggle-knob">
+                    <i class="fa-solid fa-sun toggle-icon-sun" aria-hidden="true"></i>
+                    <i class="fa-solid fa-moon toggle-icon-moon" aria-hidden="true"></i>
+                </span>
+            </button>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top:16px;">
+        <div class="section-box" style="text-align:center;padding:28px 20px;">
+            <div style="width:76px;height:76px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+                <i class="fa-solid fa-user" style="font-size:32px;color:white;" aria-hidden="true"></i>
+            </div>
+            <div id="profileName" style="font-size:var(--fs-lg);font-weight:700;color:var(--text-primary);">—</div>
+            <div id="profileContact" style="font-size:var(--fs-sm);color:var(--text-muted);margin-top:4px;">—</div>
+        </div>
+
+        <div class="section-box" style="margin-top:14px;">
+            <a href="report.html" style="display:flex;align-items:center;gap:12px;padding:12px 4px;text-decoration:none;color:var(--text-primary);border-bottom:0.5px solid var(--divider);">
+                <i class="fa-solid fa-circle-exclamation" style="color:var(--accent);width:20px;text-align:center;" aria-hidden="true"></i>
+                <span style="flex:1;font-size:var(--fs-base);">เรื่องที่เคยแจ้ง</span>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </a>
+            <a href="track.html" style="display:flex;align-items:center;gap:12px;padding:12px 4px;text-decoration:none;color:var(--text-primary);">
+                <i class="fa-solid fa-magnifying-glass" style="color:var(--accent);width:20px;text-align:center;" aria-hidden="true"></i>
+                <span style="flex:1;font-size:var(--fs-base);">ติดตามสถานะ</span>
+                <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:13px;" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        <button class="btn-navy" id="logoutBtn" type="button" style="margin-top:20px;background:transparent;color:var(--accent);border:1.5px solid var(--accent);">
+            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+            ออกจากระบบ
+        </button>
+    </main>
+
+    <nav class="bottom-nav" aria-label="เมนูหลัก">
+        <a href="index.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-house"></i></span>
+            <span class="nav-text">หน้าหลัก</span>
+        </a>
+        <a href="report.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span class="nav-text">ร้องเรียน</span>
+        </a>
+        <a href="track.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="nav-text">ติดตาม</span>
+        </a>
+        <a href="profile.html" class="nav-item active" aria-current="page">
+            <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="nav-text">โปรไฟล์</span>
+        </a>
+    </nav>
+</div>
+
+<div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+<script src="script.js"></script>
+<script>
+(function checkLoginAndRender(){
+    var role = sessionStorage.getItem('userRole');
+    var name = sessionStorage.getItem('userName');
+
+    if (role !== 'public' || !name) {
+        /* ยังไม่ได้ login — เด้งกลับไปหน้า login ทันที */
+        window.location.href = 'login.html';
+        return;
+    }
+
+    var phone = sessionStorage.getItem('userPhone') || '';
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('profileContact').textContent = phone
+        ? phone
+        : 'บัญชี Google / LINE';
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', function() {
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userName');
+    sessionStorage.removeItem('userPhone');
+    showToast('ออกจากระบบแล้ว', 'success');
+    setTimeout(function(){ window.location.href = 'index.html'; }, 900);
+});
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    });
+}
+</script>
+</body>
+</html>
