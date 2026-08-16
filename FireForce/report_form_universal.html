@@ -79,13 +79,13 @@
             <div class="input-group">
                 <label for="reporterName">ชื่อผู้แจ้งเหตุ</label>
                 <input type="text" id="reporterName" class="custom-input"
-                       placeholder="กรอกชื่อ-นามสกุล" autocomplete="name">
+                       placeholder="กรอกชื่อ-นามสกุล" autocomplete="name" required>
             </div>
 
             <div class="input-group">
                 <label for="reporterPhone">เบอร์โทรกลับ</label>
                 <input type="tel" id="reporterPhone" class="custom-input digits-only"
-                       placeholder="0XX-XXX-XXXX" autocomplete="tel" inputmode="tel">
+                       placeholder="0XX-XXX-XXXX" autocomplete="tel" inputmode="tel" required>
             </div>
 
             <div class="input-group">
@@ -115,7 +115,7 @@
             <div class="input-group">
                 <label for="incidentDetails">รายละเอียดเหตุการณ์</label>
                 <textarea id="incidentDetails" class="custom-input" rows="3"
-                          placeholder="ระบุสถานที่และสิ่งที่เห็น..."></textarea>
+                          placeholder="ระบุสถานที่และสิ่งที่เห็น..." required></textarea>
             </div>
 
             <div class="input-group">
@@ -301,10 +301,11 @@ function resetBtn() {
 }
 
 document.getElementById('submitReportBtn').addEventListener('click', async function() {
+  try {
     var name    = document.getElementById('reporterName').value.trim();
     var phone   = document.getElementById('reporterPhone').value.trim();
     var details = document.getElementById('incidentDetails').value.trim();
-    
+
     if (!name)    { showToast('กรุณากรอกชื่อผู้แจ้งเหตุ', 'error'); document.getElementById('reporterName').focus(); return; }
     if (!phone)   { showToast('กรุณากรอกเบอร์โทรกลับ', 'error'); document.getElementById('reporterPhone').focus(); return; }
     if (!/^0[0-9]{8,9}$/.test(phone)) {
@@ -323,25 +324,34 @@ document.getElementById('submitReportBtn').addEventListener('click', async funct
         subCategory = document.getElementById('disasterType').value;
         if (!subCategory) { showToast('กรุณาเลือกประเภทสาธารณภัย', 'error'); document.getElementById('disasterType').focus(); return; }
     }
-    
+
+    /* popup ยืนยันข้อมูลก่อนส่งจริง */
+    var confirmMsg = 'ยืนยันข้อมูลที่จะส่ง\n\n'
+        + 'ผู้แจ้ง: ' + name + '\n'
+        + 'เบอร์โทร: ' + phone + '\n'
+        + (subCategory ? 'ประเภท: ' + subCategory + '\n' : '')
+        + 'รายละเอียด: ' + details + '\n\n'
+        + 'ต้องการส่งเรื่องนี้หรือไม่?';
+    if (!confirm(confirmMsg)) return;
+
     var btn = document.getElementById('submitReportBtn');
     btn.disabled = true; btn.style.opacity = '0.7';
     document.getElementById('submitBtnText').textContent = 'กำลังส่งข้อมูล...';
     document.getElementById('submitIcon').className = 'fa-solid fa-spinner fa-spin';
     showToast('กำลังส่งข้อมูลแจ้งเหตุ...', 'info');
-    
+
     try {
         var res = await fetch(SCRIPT_URL, {
             method:'POST',
-            body:JSON.stringify({ 
-                type: 'report', 
+            body:JSON.stringify({
+                type: 'report',
                 category: currentType,
                 subCategory: subCategory,
-                reporterName: name, 
-                reporterPhone: phone, 
-                location: currentLocation, 
-                details: details, 
-                imageUrl: currentBase64 // ส่งข้อมูลภาพ Base64 ไปด้วย (ถ้าไม่มีรูปจะเป็นค่าว่าง '')
+                reporterName: name,
+                reporterPhone: phone,
+                location: currentLocation,
+                details: details,
+                imageUrl: currentBase64
             }),
         });
         var json = await res.json();
@@ -356,6 +366,11 @@ document.getElementById('submitReportBtn').addEventListener('click', async funct
         showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
         resetBtn();
     }
+  } catch (outerErr) {
+    /* ดักทุก error ที่ไม่คาดคิด กันปุ่มเงียบไม่ตอบสนอง */
+    showToast('เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง', 'error');
+    resetBtn();
+  }
 });
 </script>
 </body>

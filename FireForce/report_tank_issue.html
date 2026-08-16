@@ -57,7 +57,7 @@
             <div class="input-group">
                 <label for="issueDesc">เป็นอะไร / เกิดอะไรขึ้น</label>
                 <textarea id="issueDesc" class="custom-input" rows="4"
-                          placeholder="เช่น ถังหาย, สายฉีดขาด, สลักหลุด..."></textarea>
+                          placeholder="เช่น ถังหาย, สายฉีดขาด, สลักหลุด..." required></textarea>
             </div>
 
             <div class="input-group">
@@ -136,9 +136,13 @@ function resetBtn() {
 }
 
 document.getElementById('submitBtn').addEventListener('click', async function() {
+  try {
     var desc   = document.getElementById('issueDesc').value.trim();
     var tankId = document.getElementById('tankIdLabel').textContent.replace('รหัสถัง: ', '');
     if (!desc) { showToast('กรุณากรอกรายละเอียดปัญหาที่พบ', 'error'); document.getElementById('issueDesc').focus(); return; }
+
+    if (!confirm('ยืนยันแจ้งปัญหาถัง ' + tankId + '\n\nรายละเอียด: ' + desc + '\n\nต้องการส่งเรื่องนี้หรือไม่?')) return;
+
     var btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.style.opacity = '0.7';
     document.getElementById('submitBtnText').textContent = 'กำลังส่ง...';
@@ -161,6 +165,10 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
         showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
         resetBtn();
     }
+  } catch (outerErr) {
+    showToast('เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง', 'error');
+    resetBtn();
+  }
 });
 </script>
 </body>
