@@ -257,15 +257,12 @@ function doSearch(){
 
     var phone=normalizePhone(raw);
 
-    fetch(SCRIPT_URL+'?type=getReports')
+    fetch(SCRIPT_URL+'?type=getReportsByPhone&phone='+encodeURIComponent(phone))
         .then(function(res){return res.json();})
         .then(function(data){
             var results=[];
             if(data.success&&data.reports&&data.reports.length){
-                results=data.reports.filter(function(r){
-                    var rPhone=(r.ReporterPhone||'').toString();
-                    return normalizePhone(rPhone)===phone;
-                }).map(function(r){
+                results=data.reports.map(function(r){
                     var catKey=(r.Category||'other').toLowerCase();
                     return {
                         id      : r.ReportID||'—',
