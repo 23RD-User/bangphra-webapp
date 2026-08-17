@@ -246,6 +246,8 @@ function renderCards(list){
     }).join('');
 }
 
+var searchSeq = 0;
+
 function doSearch(){
     var raw=document.getElementById('phoneInput').value.trim();
     if(!raw){ showToast('กรุณากรอกเบอร์โทรศัพท์','error'); document.getElementById('phoneInput').focus(); return; }
@@ -256,10 +258,16 @@ function doSearch(){
     document.getElementById('searchIcon').className='fa-solid fa-spinner fa-spin';
 
     var phone=normalizePhone(raw);
+    var mySeq = ++searchSeq; // เลขรอบของการค้นหาครั้งนี้โดยเฉพาะ
 
-    fetch(SCRIPT_URL+'?type=getReportsByPhone&phone='+encodeURIComponent(phone)+'&_t='+Date.now(), { cache: 'no-store' })
+    fetch(SCRIPT_URL, {
+            method: 'POST',
+            cache: 'no-store',
+            body: JSON.stringify({ type: 'getReportsByPhone', phone: phone }),
+        })
         .then(function(res){return res.json();})
         .then(function(data){
+            if (mySeq !== searchSeq) return; // มีการค้นหารอบใหม่แซงไปแล้ว ทิ้งผลลัพธ์เก่านี้
             var results=[];
             if(data.success&&data.reports&&data.reports.length){
                 results=data.reports.map(function(r){
@@ -278,6 +286,7 @@ function doSearch(){
             showResults(raw,results);
         })
         .catch(function(){
+            if (mySeq !== searchSeq) return; // มีการค้นหารอบใหม่แซงไปแล้ว ทิ้ง error นี้ด้วย
             showResults(raw,[],true);
         });
 }
