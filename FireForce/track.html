@@ -257,7 +257,7 @@ function doSearch(){
 
     var phone=normalizePhone(raw);
 
-    fetch(SCRIPT_URL+'?type=getReportsByPhone&phone='+encodeURIComponent(phone))
+    fetch(SCRIPT_URL+'?type=getReportsByPhone&phone='+encodeURIComponent(phone)+'&_t='+Date.now(), { cache: 'no-store' })
         .then(function(res){return res.json();})
         .then(function(data){
             var results=[];
