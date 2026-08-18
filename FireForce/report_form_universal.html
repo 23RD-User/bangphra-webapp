@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1C2B4A">
+    <style>
+        .req-mark{color:#C62828;margin-left:2px;}
+    </style>
     <script>
         (function(){
             var t = localStorage.getItem('theme') || 'light';
@@ -69,7 +72,7 @@
             </h3>
 
             <div class="input-group" id="disasterTypeGroup" style="display:none;">
-                <label for="disasterType">ประเภทสาธารณภัย</label>
+                <label for="disasterType">ประเภทสาธารณภัย<span class="req-mark">*</span></label>
                 <select id="disasterType" class="custom-input">
                     <option value="">— กรุณาเลือกประเภท —</option>
                     <option value="ไฟไหม้">ไฟไหม้</option>
@@ -79,13 +82,13 @@
             </div>
 
             <div class="input-group">
-                <label for="reporterName">ชื่อผู้แจ้งเหตุ</label>
+                <label for="reporterName">ชื่อผู้แจ้งเหตุ<span class="req-mark">*</span></label>
                 <input type="text" id="reporterName" class="custom-input"
                        placeholder="กรอกชื่อ-นามสกุล" autocomplete="name" required>
             </div>
 
             <div class="input-group">
-                <label for="reporterPhone">เบอร์โทรกลับ</label>
+                <label for="reporterPhone">เบอร์โทรกลับ<span class="req-mark">*</span></label>
                 <input type="tel" id="reporterPhone" class="custom-input digits-only"
                        placeholder="0XX-XXX-XXXX" autocomplete="tel" inputmode="tel" required>
             </div>
@@ -93,7 +96,7 @@
             <div class="input-group">
                 <label>
                     <i class="fa-solid fa-location-dot" style="color:var(--accent);margin-right:6px;" aria-hidden="true"></i>
-                    ตำแหน่งเกิดเหตุ
+                    ตำแหน่งเกิดเหตุ<span class="req-mark">*</span>
                 </label>
                 <div class="location-box">
                     <div class="map-placeholder">
@@ -115,7 +118,7 @@
             </div>
 
             <div class="input-group">
-                <label for="incidentDetails">รายละเอียดเหตุการณ์</label>
+                <label for="incidentDetails">รายละเอียดเหตุการณ์<span class="req-mark">*</span></label>
                 <textarea id="incidentDetails" class="custom-input" rows="3"
                           placeholder="ระบุสถานที่และสิ่งที่เห็น..." required></textarea>
             </div>
