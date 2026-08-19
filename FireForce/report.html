@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1C2B4A">
     <script>
         (function(){
             var t = localStorage.getItem('theme') || 'light';
@@ -136,6 +138,15 @@
                     <div style="font-size:var(--fs-xs);color:var(--text-muted);margin-top:3px;">ไฟไหม้ · น้ำท่วม · วาตภัย</div>
                 </div>
             </a>
+            <a href="report_tank_issue.html" class="report-card full-width" role="listitem" aria-label="แจ้งปัญหาถังดับเพลิง">
+                <div class="report-card-icon" style="width:56px;height:56px;border-radius:15px;">
+                    <i class="fa-solid fa-fire-extinguisher" aria-hidden="true" style="font-size:26px;"></i>
+                </div>
+                <div>
+                    <div class="report-card-title" style="font-size:var(--fs-md);">ถังดับเพลิงชำรุด/สูญหาย</div>
+                    <div style="font-size:var(--fs-xs);color:var(--text-muted);margin-top:3px;">แจ้งปัญหาถังดับเพลิงในพื้นที่</div>
+                </div>
+            </a>
         </div>
     </main>
 
@@ -152,7 +163,7 @@
             <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
             <span class="nav-text">ติดตาม</span>
         </a>
-        <a href="login.html" class="nav-item">
+        <a href="profile.html" class="nav-item">
             <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
             <span class="nav-text">โปรไฟล์</span>
         </a>
@@ -161,5 +172,12 @@
 
 <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 <script src="script.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+        navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    });
+}
+</script>
 </body>
 </html>
