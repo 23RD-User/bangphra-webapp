@@ -154,7 +154,6 @@
 <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 <script src="script.js"></script>
 <script>
-var SCRIPT_URL='https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 
 var catConfig={
     disaster:   {label:'สาธารณภัย',          icon:'fa-fire',       bg:'#FFEBEE',color:'#C62828'},
@@ -262,7 +261,7 @@ function doSearch(){
     var phone=normalizePhone(raw);
     var mySeq = ++searchSeq; // เลขรอบของการค้นหาครั้งนี้โดยเฉพาะ
 
-    fetch(SCRIPT_URL, {
+    fetchWithTimeout(SCRIPT_URL, {
             method: 'POST',
             cache: 'no-store',
             body: JSON.stringify({ type: 'getReportsByPhone', phone: phone }),

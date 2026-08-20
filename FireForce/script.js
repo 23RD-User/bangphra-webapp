@@ -3,6 +3,23 @@
    โหลดทุกหน้า — ฟังก์ชันทำงานเฉพาะเมื่อพบ element ที่เกี่ยวข้อง
    ============================================================ */
 
+/* 0. SCRIPT_URL กลาง — จุดเดียวสำหรับทุกหน้า
+   แก้ URL ตรงนี้ที่เดียว ไม่ต้องไล่แก้ทุกไฟล์ */
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
+
+/* 0.1 fetchWithTimeout — ครอบ fetch() ให้ยกเลิกอัตโนมัติถ้าช้าเกินไป
+   ป้องกันปัญหาเน็ตช้า/สะดุดแล้วหน้าเว็บค้างรอไม่จบ
+   ใช้แทน fetch() ตรงๆ ทุกจุดที่เรียก SCRIPT_URL: fetchWithTimeout(url, options, timeoutMs)
+   timeoutMs default 10000ms (10 วิ) — err.name === 'AbortError' คือ timeout */
+function fetchWithTimeout(url, options, timeoutMs) {
+    timeoutMs = timeoutMs || 10000;
+    var controller = new AbortController();
+    var timeoutId  = setTimeout(function(){ controller.abort(); }, timeoutMs);
+    options = options || {};
+    options.signal = controller.signal;
+    return fetch(url, options).finally(function(){ clearTimeout(timeoutId); });
+}
+
 /* 1. Dark / Light Mode */
 (function initTheme() {
     var saved = localStorage.getItem('theme') || 'light';

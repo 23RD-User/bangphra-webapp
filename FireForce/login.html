@@ -122,7 +122,6 @@
 <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 <script src="script.js"></script>
 <script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 var GOOGLE_CLIENT_ID = '190568755025-u81it2adempve42s9pfj3fpm9sav52bp.apps.googleusercontent.com';
 var currentRole = 'public';
 
@@ -159,7 +158,7 @@ function fetchGoogleProfileAndLogin(accessToken) {
     .then(function(res){ return res.json(); })
     .then(function(profile){
         showToast('เชื่อมต่อ Gmail สำเร็จ กำลังตรวจสอบบัญชี...', 'info');
-        return fetch(SCRIPT_URL, {
+        return fetchWithTimeout(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 type : 'loginGoogle',
@@ -258,7 +257,7 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 
     if (currentRole === 'public') {
         showToast('กำลังเข้าสู่ระบบ...', 'info');
-        fetch(SCRIPT_URL, {
+        fetchWithTimeout(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
                 type    : 'loginPublic',
@@ -289,7 +288,7 @@ document.getElementById('loginBtn').addEventListener('click', function() {
     }
 
     showToast('กำลังตรวจสอบสิทธิ์...', 'info');
-    fetch(SCRIPT_URL, {
+    fetchWithTimeout(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({
             type    : 'login',

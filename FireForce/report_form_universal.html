@@ -175,7 +175,6 @@
 <script src="script.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 
 // ตัวแปรสำหรับเก็บข้อมูลรูปภาพที่แปลงเป็น Base64 แล้ว
 var currentBase64 = ''; 
@@ -346,7 +345,7 @@ document.getElementById('submitReportBtn').addEventListener('click', async funct
     showToast('กำลังส่งข้อมูลแจ้งเหตุ...', 'info');
 
     try {
-        var res = await fetch(SCRIPT_URL, {
+        var res = await fetchWithTimeout(SCRIPT_URL, {
             method:'POST',
             body:JSON.stringify({
                 type: 'report',

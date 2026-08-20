@@ -227,7 +227,6 @@ var communityZones = [
       coords:[[13.21705,100.938938],[13.217175,100.937607],[13.21705,100.936942],[13.213749,100.936942],[13.212141,100.936942],[13.21258,100.940998],[13.213162,100.941336],[13.217056,100.939194],[13.21705,100.938938]] }
 ];
 
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 var TANKS = [];
 
 var statusMap = {
@@ -291,7 +290,7 @@ function loadTanks() {
 var CITIZEN_REPORT_IDS = [];
 
 function loadCitizenReports() {
-    fetch(SCRIPT_URL + '?type=getTankIssueReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
+    fetchWithTimeout(SCRIPT_URL + '?type=getTankIssueReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
         .then(function(res){ return res.json(); })
         .then(function(data){
             if (!data.success || !data.reports) { CITIZEN_REPORT_IDS = []; return; }

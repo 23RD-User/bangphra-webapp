@@ -382,7 +382,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="script.js"></script>
 <script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 
 /* =====================================================
    C — Particle Animation ใน Header
@@ -538,7 +537,7 @@ var currentNewsList = [];
 async function loadNews() {
     var container = document.getElementById('newsList');
     try {
-        var res  = await fetch(SCRIPT_URL + '?type=getNews');
+        var res  = await fetchWithTimeout(SCRIPT_URL + '?type=getNews');
         var data = await res.json();
         if (!data.success || !data.news || data.news.length === 0) {
             container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:16px 0;font-size:var(--fs-sm);">ยังไม่มีข่าวสาร</p>';

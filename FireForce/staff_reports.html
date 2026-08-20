@@ -109,7 +109,7 @@
 /* ===== Export CSV (ย้ายมาจาก staff_settings.html) ===== */
 function exportReports(){
     showToast('กำลังดึงข้อมูล...', 'info');
-    fetch(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
+    fetchWithTimeout(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
         .then(function(res){ return res.json(); })
         .then(function(data){
             if (!data.success || !data.reports || data.reports.length === 0) {
@@ -143,7 +143,6 @@ function exportReports(){
         });
 }
 
-var SCRIPT_URL='https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 
 var catConfig={
     disaster:   {icon:'fa-fire',       bg:'#FFEBEE',color:'#C62828',label:'สาธารณภัย'},
@@ -167,7 +166,7 @@ function loadReports(){
     document.getElementById('reportList').innerHTML=
         '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><p>กำลังโหลดข้อมูล...</p></div>';
 
-    fetch(SCRIPT_URL+'?type=getReports&token='+encodeURIComponent(sessionStorage.getItem('staffToken')||''))
+    fetchWithTimeout(SCRIPT_URL+'?type=getReports&token='+encodeURIComponent(sessionStorage.getItem('staffToken')||''))
         .then(function(res){ return res.json(); })
         .then(function(data){
             if(data.success && data.reports){
@@ -300,7 +299,7 @@ function updateStatus(id,newStatus){
     var msgs={inprogress:'รับเรื่องแล้ว กำลังดำเนินการ',done:'แก้ไขเสร็จสิ้น',cancel:'ยกเลิกเรื่องแล้ว'};
     showToast(msgs[newStatus]||'กำลังอัปเดต...','info');
 
-    fetch(SCRIPT_URL,{
+    fetchWithTimeout(SCRIPT_URL,{
         method:'POST',
         body:JSON.stringify({
             type      :'updateReport',

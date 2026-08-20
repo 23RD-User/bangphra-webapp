@@ -56,6 +56,12 @@
                 รายละเอียดปัญหาที่พบ
             </h3>
 
+            <div class="input-group" id="manualLocationGroup" style="display:none;">
+                <label for="manualLocation">ตำแหน่ง/จุดที่พบถัง<span class="req-mark" style="color:#C62828;margin-left:2px;">*</span></label>
+                <input type="text" id="manualLocation" class="custom-input"
+                       placeholder="เช่น หน้าอาคาร A ชั้น 1, ใกล้ประตูทางเข้า...">
+            </div>
+
             <div class="input-group">
                 <label for="issueDesc">เป็นอะไร / เกิดอะไรขึ้น</label>
                 <textarea id="issueDesc" class="custom-input" rows="4"
@@ -97,15 +103,20 @@
 <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 <script src="script.js"></script>
 <script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 var currentBase64 = '';
 
 (function loadTankInfo(){
     var params   = new URLSearchParams(window.location.search);
-    var tankId   = params.get('id')   || '—';
+    var tankId   = params.get('id');
     var tankName = params.get('name') || 'ไม่ระบุสถานที่';
-    document.getElementById('tankIdLabel').textContent      = 'รหัสถัง: ' + tankId;
-    document.getElementById('tankLocationLabel').textContent = tankName;
+    if (!tankId) {
+        document.getElementById('tankIdLabel').textContent = 'แจ้งทั่วไป (ไม่ทราบรหัสถัง)';
+        document.getElementById('tankLocationLabel').textContent = 'กรุณาระบุตำแหน่งที่พบด้านล่าง';
+        document.getElementById('manualLocationGroup').style.display = 'block';
+    } else {
+        document.getElementById('tankIdLabel').textContent      = 'รหัสถัง: ' + tankId;
+        document.getElementById('tankLocationLabel').textContent = tankName;
+    }
 })();
 
 document.getElementById('cameraInput').addEventListener('change', function(e) {
@@ -141,9 +152,21 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
   try {
     var desc   = document.getElementById('issueDesc').value.trim();
     var tankId = document.getElementById('tankIdLabel').textContent.replace('รหัสถัง: ', '');
+    var isManual = tankId === 'แจ้งทั่วไป (ไม่ทราบรหัสถัง)';
+    var manualLoc = document.getElementById('manualLocation').value.trim();
+
+    if (isManual && !manualLoc) {
+        showToast('กรุณาระบุตำแหน่ง/จุดที่พบถัง', 'error');
+        document.getElementById('manualLocation').focus();
+        return;
+    }
     if (!desc) { showToast('กรุณากรอกรายละเอียดปัญหาที่พบ', 'error'); document.getElementById('issueDesc').focus(); return; }
 
-    if (!confirm('ยืนยันแจ้งปัญหาถัง ' + tankId + '\n\nรายละเอียด: ' + desc + '\n\nต้องการส่งเรื่องนี้หรือไม่?')) return;
+    var equipmentId = isManual ? 'ไม่ทราบรหัส' : tankId;
+    var fullDesc = isManual ? ('[ตำแหน่ง: ' + manualLoc + '] ' + desc) : desc;
+    var confirmLabel = isManual ? ('ตำแหน่ง ' + manualLoc) : ('ถัง ' + tankId);
+
+    if (!confirm('ยืนยันแจ้งปัญหา' + confirmLabel + '\n\nรายละเอียด: ' + desc + '\n\nต้องการส่งเรื่องนี้หรือไม่?')) return;
 
     var btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.style.opacity = '0.7';
@@ -151,9 +174,9 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     document.getElementById('submitIcon').className = 'fa-solid fa-spinner fa-spin';
     showToast('กำลังส่งข้อมูล...', 'info');
     try {
-        var res = await fetch(SCRIPT_URL, {
+        var res = await fetchWithTimeout(SCRIPT_URL, {
             method:'POST',
-            body:JSON.stringify({ type:'reportTankIssue', equipmentId:tankId, description:desc, imageUrl:currentBase64 }),
+            body:JSON.stringify({ type:'reportTankIssue', equipmentId:equipmentId, description:fullDesc, imageUrl:currentBase64 }),
         });
         var json = await res.json();
         if (json.success) {

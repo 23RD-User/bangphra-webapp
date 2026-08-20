@@ -204,7 +204,6 @@
 <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 <script src="script.js"></script>
 <script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1_L8WE3BlHuj03b_3PzykhyMQJC9PRgsRJKNz6mNJMJriE8Q/exec';
 
 (function initStaffPage(){
     var role  = sessionStorage.getItem('userRole')  || 'staff';
@@ -230,7 +229,7 @@ var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfr1v1kHo2Tq14MnabWE1
 /* ===== รายชื่อเจ้าหน้าที่ (ย้ายมาจาก staff_settings.html) ===== */
 function loadStaffList() {
     document.getElementById('staffModal').style.display = 'flex';
-    fetch(SCRIPT_URL + '?type=getStaff&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
+    fetchWithTimeout(SCRIPT_URL + '?type=getStaff&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''))
         .then(function(res){ return res.json(); })
         .then(function(data){
             if (!data.success || !data.staff || data.staff.length === 0) {
@@ -293,7 +292,7 @@ function countUp(el, target, dur) {
 
 async function loadStats() {
     try {
-        var res  = await fetch(SCRIPT_URL + '?type=stats');
+        var res  = await fetchWithTimeout(SCRIPT_URL + '?type=stats');
         var data = await res.json();
         if (!data.success) throw new Error(data.message);
 
@@ -333,7 +332,7 @@ function timeAgo(dateStr) {
 
 async function loadUrgentReports() {
     try {
-        var res  = await fetch(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''));
+        var res  = await fetchWithTimeout(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''));
         var data = await res.json();
         if (!data.success) {
             if (data.message && data.message.indexOf('เข้าสู่ระบบใหม่') > -1) {
@@ -394,7 +393,7 @@ function confirmLogout() {
     if (!confirm('ยืนยันการออกจากระบบ?')) return;
 
     var token = sessionStorage.getItem('staffToken') || '';
-    fetch(SCRIPT_URL, {
+    fetchWithTimeout(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({ type: 'logout', token: token }),
     })
