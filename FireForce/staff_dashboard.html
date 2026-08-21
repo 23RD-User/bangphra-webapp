@@ -77,6 +77,28 @@
         .service-card{transition:transform .15s ease,box-shadow .15s ease}
         .service-card:hover{transform:translateY(-2px)}
         .service-card:active{transform:translateY(0) scale(.96)}
+
+        /* แจ้งเตือนเรื่องแจ้งเหตุใหม่ */
+        .new-report-popup-overlay{
+            position:fixed;inset:0;background:rgba(0,0,0,0.55);
+            display:flex;align-items:center;justify-content:center;
+            z-index:9999;padding:20px;
+            animation:popup-fade-in 0.2s ease;
+        }
+        @keyframes popup-fade-in{from{opacity:0}to{opacity:1}}
+        .new-report-popup-box{
+            background:var(--card-bg,#fff);border-radius:18px;
+            padding:26px 22px;max-width:340px;width:100%;text-align:center;
+            animation:popup-pop-in 0.25s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes popup-pop-in{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}
+        .new-report-popup-icon{
+            width:56px;height:56px;border-radius:50%;background:#FFEBEE;
+            display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+        }
+        .new-report-popup-icon i{font-size:26px;color:#C62828;}
+        .new-report-popup-title{font-size:var(--fs-md);font-weight:700;color:var(--text-primary);}
+        .new-report-popup-sub{font-size:var(--fs-sm);color:var(--text-muted);margin-top:6px;}
     </style>
 </head>
 <body>
@@ -406,6 +428,80 @@ function confirmLogout() {
 
 loadStats();
 loadUrgentReports();
+
+/* =====================================================
+   แจ้งเตือนเรื่องแจ้งเหตุใหม่ — poll ทุก 20 วิ ขณะเปิดหน้านี้ค้างไว้
+   ครั้งแรกแค่บันทึก ReportID ที่มีอยู่ (baseline) ไม่เด้งแจ้งเตือน
+   ครั้งถัดไปถ้าเจอ ReportID ใหม่ที่ยังไม่เคยเห็น ถึงจะเด้ง popup + เสียง
+   ===================================================== */
+var seenReportIds = null;
+var NEW_REPORT_POLL_MS = 5000;
+
+function playAlertBeep() {
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.18].forEach(function(delay){
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.15, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + 0.16);
+        });
+    } catch (e) { /* บางเบราว์เซอร์อาจไม่รองรับ AudioContext — ข้ามไปเงียบๆ */ }
+}
+
+function showNewReportPopup(count) {
+    var overlay = document.createElement('div');
+    overlay.className = 'new-report-popup-overlay';
+    overlay.innerHTML =
+        '<div class="new-report-popup-box">' +
+            '<div class="new-report-popup-icon"><i class="fa-solid fa-bell" aria-hidden="true"></i></div>' +
+            '<div class="new-report-popup-title">มีเรื่องแจ้งเหตุใหม่เข้ามา</div>' +
+            '<div class="new-report-popup-sub">' + count + ' รายการที่ยังไม่ได้ดำเนินการ</div>' +
+            '<div style="display:flex;gap:8px;margin-top:16px;">' +
+                '<button type="button" class="btn-navy" id="newReportDismissBtn" style="flex:1;background:transparent;color:var(--text-muted);border:1.5px solid var(--divider);">ปิด</button>' +
+                '<a href="staff_reports.html" class="btn-navy" style="flex:1;text-decoration:none;display:flex;align-items:center;justify-content:center;">ดูเลย</a>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+    document.getElementById('newReportDismissBtn').addEventListener('click', function(){ overlay.remove(); });
+}
+
+async function checkNewReports() {
+    try {
+        var res  = await fetchWithTimeout(SCRIPT_URL + '?type=getReports&token=' + encodeURIComponent(sessionStorage.getItem('staffToken') || ''));
+        var data = await res.json();
+        if (!data.success) return;
+
+        var currentIds = (data.reports || []).map(function(r){ return r.ReportID; });
+
+        if (seenReportIds === null) {
+            /* โหลดครั้งแรก — แค่บันทึก baseline ไม่แจ้งเตือน */
+            seenReportIds = new Set(currentIds);
+            return;
+        }
+
+        var newOnes = currentIds.filter(function(id){ return !seenReportIds.has(id); });
+        seenReportIds = new Set(currentIds);
+
+        if (newOnes.length > 0) {
+            playAlertBeep();
+            showNewReportPopup(newOnes.length);
+            loadStats();
+            loadUrgentReports();
+        }
+    } catch (err) {
+        console.error('checkNewReports error:', err);
+    }
+}
+
+checkNewReports();
+setInterval(checkNewReports, NEW_REPORT_POLL_MS);
+
 </script>
 <script>
 if ('serviceWorker' in navigator) {
